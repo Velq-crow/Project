@@ -1,7 +1,7 @@
 # Subsystem 3 Eng1013
 # Author: Ketan Karnati
 # Last modified: 27/08/2026
-# Version: 1.0
+# Version: 1.1
 
 
 from pymata4 import pymata4
@@ -34,32 +34,75 @@ board.set_pin_mode_digital_output(greenPin)
 time.sleep(1)
 
 def heightDiff(distance):
+    """
+    Used to minus the distance measured by the ultrasonic sensor (US5) from the TOP_HEIGHT giving the vehicle height.
+
+        Parameters:
+            distance: To be used in calculation TOP_HEIGHT - distance[]
+
+        Returns:
+            Returns TOP_HEIGHT - distance[0]
+    """
     return TOP_HEIGHT - distance[0]
 
 def normal_state():
+    """
+    Sets the traffic light (TL6) to red.
+
+        Parameters:
+            None
+
+        Returns:
+            function has no return
+    """
     board.digital_pin_write(redPin,1)
     board.digital_pin_write(greenPin,0)
     board.digital_pin_write(yellowPin,0)
 
 def overheight_state_green():
+    """
+    Sets the traffic light (TL6) to green.
+
+        Parameters:
+            None
+
+        Returns:
+            function has no return
+    """
     board.digital_pin_write(redPin,0)
     board.digital_pin_write(greenPin,1)
     time.sleep(5)
 
 def overheight_state_yellow():
+    """
+    Sets the traffic light (TL6) to yellow for the requried time 3 seconds.
+
+        Parameters:
+            None
+
+        Returns:
+            function has no return
+    """
     board.digital_pin_write(greenPin,0)
     board.digital_pin_write(yellowPin,1)
     time.sleep(3)
     board.digital_pin_write(yellowPin,0)
     board.digital_pin_write(redPin,1)
 
-
-
-
 def main():
+    """
+    The main function that uses the value gained from the heightDiff function and, through if statements,
+    triggers different traffic light functions based of the height difference of the overheight vehicle.
+
+        Parameters: 
+            None
+
+        Returns:
+            function has no return 
+    """
     lastPollTime = time.time()
     normal_state()
-    Isgreen= False
+    isGreen= False
     while True:
         try: 
 
@@ -73,11 +116,11 @@ def main():
                     if heightUS3 > maxVehHeight:
                         overheight_state_green()
                         heightUS3 = heightDiff(board.sonar_read(triggerPin)) # height of veh from us3
-                        Isgreen= True
+                        isGreen= True
                     else:    
-                        if Isgreen == True:
+                        if isGreen == True: 
                             overheight_state_yellow()
-                            Isgreen= False
+                            isGreen= False
                             break
                         else:
                             break
