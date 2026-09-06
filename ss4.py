@@ -1,6 +1,4 @@
 # Subsystem 4 Eng1013
-# Author: Ketan Karnati
-# Last modified: 27/08/2026
 # Version: 1.2
 
 
