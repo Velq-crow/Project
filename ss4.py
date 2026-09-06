@@ -1,7 +1,7 @@
 # Subsystem 4 Eng1013
 # Author: Ketan Karnati
 # Last modified: 27/08/2026
-# Version: 1.1
+# Version: 1.2
 
 
 from pymata4 import pymata4
@@ -41,21 +41,67 @@ board.set_pin_mode_sonar(triggerPinUS4,echoPinUS4,timeout=200000)
 time.sleep(1)
 
 def heightDiff(distance):
+    """
+    Used to minus the distance measured by the ultrasonic sensor (US5) from the TOP_HEIGHT to give actual height of the vechicle.
+
+        Parameters:
+            distance: To be used in calculation TOP_HEIGHT - distance[]
+
+        Returns:
+            Returns TOP_HEIGHT - distance[0]
+    """
     return TOP_HEIGHT - distance[0]
     
 def normal_state():
+    """
+    This switches the pin connected to the green LED to 1 to allow traffic to flow through to the tunnel.
+
+        Parameters:
+            None
+
+        Returns:
+            This function has no returns
+    """
     board.digital_pin_write(redPin,0)
     board.digital_pin_write(greenPin,1)
 
 def overheight_state():
+    """
+    This switches the pin connected to the red LED to 1 to shine red and stop the overheight vehicle from moving into the tunnel.
+
+        Parameters:
+            None
+
+        Returns:
+            This function has no returns
+    """
     board.digital_pin_write(redPin,1)
     board.digital_pin_write(greenPin,0)
 
 def shutdown_state():
+    """
+    Switches all traffic light pins to 0 in turn shutting down all traffic LEDs.
+
+        Parameters:
+            None
+
+        Returns:
+            This function has no returns
+    """
     board.digital_pin_write(redPin,0)
     board.digital_pin_write(greenPin,0)
 
 def main():
+    """ 
+    The main function, that is the central control loop that continuously polls ultrasonic sensors to measure the 
+    height of the vehicle and manage traffic light states based the vehicle's height. 
+
+        Parameters:
+            None
+
+        Returns: 
+            This function has no returns
+    """
     while True:
         try: 
             #Validation loop
@@ -98,7 +144,6 @@ def main():
                         if lowerErrorBound <= heightUS4 <= upperErrorBound:
                             overheight_state()
                     else:
-                        if lowerErrorBound <= heightUS4 <= upperErrorBound:
                             normal_state()
                     
                 time.sleep(0.05)
