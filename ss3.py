@@ -38,7 +38,7 @@ def heightDiff(distance):
     Used to minus the distance measured by the ultrasonic sensor (US5) from the TOP_HEIGHT giving the vehicle height.
 
         Parameters:
-            distance: To be used in calculation TOP_HEIGHT - distance[]
+            distance: To be used in calculation TOP_HEIGHT - distance[0]
 
         Returns:
             Returns TOP_HEIGHT - distance[0]
