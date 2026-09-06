@@ -1,7 +1,5 @@
 # Subsystem 2 Eng1013
-# Author: Ketan Karnati
-# Last modified: 27/08/2026
-# Version: 1.0
+# Version: 1.1
 
 from pymata4 import pymata4
 import time
