@@ -1,0 +1,174 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="Page-1" id="HN5GvnX6Ajkm-lDg_q5F">
+    <mxGraphModel dx="1272" dy="946" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="1" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="bvz9wUnWxVS65UuX1sjq-61" connectable="0" parent="1" style="group;fontSize=12;fontFamily=Helvetica;fontColor=default;labelBackgroundColor=default;" value="C" vertex="1">
+          <mxGeometry height="75" width="150" x="294" y="453.0000000000002" as="geometry" />
+        </mxCell>
+        <mxCell id="bvz9wUnWxVS65UuX1sjq-62" parent="bvz9wUnWxVS65UuX1sjq-61" style="rounded=0;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=10;fontColor=default;fillColor=default;points=[[0,0.5,0,0,0],[0.5,0,0,0,0],[0.5,1,0,0,0],[1,0.5,0,0,0]];labelBackgroundColor=default;" value="HC-SR04 (US4)&lt;br&gt;Ultrasonic Sensor" vertex="1">
+          <mxGeometry height="71.66666666666667" width="150" y="3.3333333333333335" as="geometry" />
+        </mxCell>
+        <mxCell id="bvz9wUnWxVS65UuX1sjq-64" parent="bvz9wUnWxVS65UuX1sjq-61" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontFamily=Helvetica;fontSize=11;fontColor=default;points=[];labelBackgroundColor=default;" value="VCC" vertex="1">
+          <mxGeometry height="25" width="35" x="60" as="geometry" />
+        </mxCell>
+        <mxCell id="bvz9wUnWxVS65UuX1sjq-65" parent="bvz9wUnWxVS65UuX1sjq-61" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontFamily=Helvetica;fontSize=11;fontColor=default;points=[];labelBackgroundColor=default;" value="Trig" vertex="1">
+          <mxGeometry height="25" width="30" y="26.666666666666668" as="geometry" />
+        </mxCell>
+        <mxCell id="bvz9wUnWxVS65UuX1sjq-66" parent="bvz9wUnWxVS65UuX1sjq-61" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontFamily=Helvetica;fontSize=11;fontColor=default;points=[];labelBackgroundColor=default;" value="Echo" vertex="1">
+          <mxGeometry height="25" width="35" x="115" y="26.666666666666668" as="geometry" />
+        </mxCell>
+        <mxCell id="bvz9wUnWxVS65UuX1sjq-67" parent="bvz9wUnWxVS65UuX1sjq-61" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontFamily=Helvetica;fontSize=11;fontColor=default;points=[];labelBackgroundColor=default;" value="GND" vertex="1">
+          <mxGeometry height="25" width="35" x="60" y="50" as="geometry" />
+        </mxCell>
+        <mxCell id="bvz9wUnWxVS65UuX1sjq-68" parent="bvz9wUnWxVS65UuX1sjq-61" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" value="U&lt;sub&gt;x&lt;/sub&gt;" vertex="1">
+          <mxGeometry height="30" width="60" x="7" y="-2.2737367544323206e-13" as="geometry" />
+        </mxCell>
+        <mxCell id="bvz9wUnWxVS65UuX1sjq-71" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;endFill=0;entryX=0.008;entryY=0.502;entryDx=0;entryDy=0;entryPerimeter=0;" target="bvz9wUnWxVS65UuX1sjq-65">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="202" y="492.2166666666669" as="sourcePoint" />
+            <mxPoint x="292" y="492.20000000000005" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="bvz9wUnWxVS65UuX1sjq-72" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.067;entryY=0.493;entryDx=0;entryDy=0;entryPerimeter=0;endArrow=none;endFill=0;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="444" y="491.66999999999996" as="sourcePoint" />
+            <mxPoint x="536" y="491.66999999999996" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="bvz9wUnWxVS65UuX1sjq-75" parent="1" style="pointerEvents=1;verticalLabelPosition=bottom;shadow=0;dashed=0;align=center;html=1;verticalAlign=top;shape=mxgraph.electrical.signal_sources.protective_earth;" value="" vertex="1">
+          <mxGeometry height="20" width="23.75" x="359.625" y="573" as="geometry" />
+        </mxCell>
+        <mxCell id="bvz9wUnWxVS65UuX1sjq-76" edge="1" parent="1" source="bvz9wUnWxVS65UuX1sjq-67" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;endFill=0;" target="bvz9wUnWxVS65UuX1sjq-75">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="371.5" y="583" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="bvz9wUnWxVS65UuX1sjq-83" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;endFill=0;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="200" y="700" as="sourcePoint" />
+            <mxPoint x="290" y="700" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="bvz9wUnWxVS65UuX1sjq-84" parent="1" style="pointerEvents=1;verticalLabelPosition=bottom;shadow=0;dashed=0;align=center;html=1;verticalAlign=top;shape=mxgraph.electrical.resistors.resistor_2;fontSize=12;fillColor=default;" value="&lt;div&gt;\(R_1\) =&amp;nbsp;220R&lt;/div&gt;" vertex="1">
+          <mxGeometry height="20" width="80" x="280" y="690" as="geometry" />
+        </mxCell>
+        <mxCell id="bvz9wUnWxVS65UuX1sjq-106" parent="1" style="verticalLabelPosition=bottom;shadow=0;dashed=0;align=center;html=1;verticalAlign=top;shape=mxgraph.electrical.opto_electronics.led_2;pointerEvents=1;fontSize=12;fillColor=black;strokeWidth=1;" value="\(D_1\) = Red" vertex="1">
+          <mxGeometry height="35" width="80" x="400" y="680" as="geometry" />
+        </mxCell>
+        <mxCell id="bvz9wUnWxVS65UuX1sjq-107" edge="1" parent="1" source="bvz9wUnWxVS65UuX1sjq-84" style="endArrow=none;html=1;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.5714;entryDx=0;entryDy=0;entryPerimeter=0;" target="bvz9wUnWxVS65UuX1sjq-106" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="410" y="720" as="sourcePoint" />
+            <mxPoint x="460" y="670" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="bvz9wUnWxVS65UuX1sjq-108" parent="1" style="pointerEvents=1;verticalLabelPosition=bottom;shadow=0;dashed=0;align=center;html=1;verticalAlign=top;shape=mxgraph.electrical.signal_sources.protective_earth;rotation=-90;" value="" vertex="1">
+          <mxGeometry height="20" width="23.75" x="478.13" y="690" as="geometry" />
+        </mxCell>
+        <mxCell id="bvz9wUnWxVS65UuX1sjq-111" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;endFill=0;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="200" y="800" as="sourcePoint" />
+            <mxPoint x="290" y="800" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="bvz9wUnWxVS65UuX1sjq-113" parent="1" style="pointerEvents=1;verticalLabelPosition=bottom;shadow=0;dashed=0;align=center;html=1;verticalAlign=top;shape=mxgraph.electrical.resistors.resistor_2;fontSize=12;fillColor=default;" value="&lt;div&gt;\(R_2\) =&amp;nbsp;220R&lt;/div&gt;" vertex="1">
+          <mxGeometry height="20" width="80" x="280" y="790" as="geometry" />
+        </mxCell>
+        <mxCell id="bvz9wUnWxVS65UuX1sjq-114" parent="1" style="verticalLabelPosition=bottom;shadow=0;dashed=0;align=center;html=1;verticalAlign=top;shape=mxgraph.electrical.opto_electronics.led_2;pointerEvents=1;fontSize=12;fillColor=black;strokeWidth=1;" value="\(D_2\) = Green" vertex="1">
+          <mxGeometry height="35" width="80" x="400" y="780" as="geometry" />
+        </mxCell>
+        <mxCell id="bvz9wUnWxVS65UuX1sjq-115" edge="1" parent="1" source="bvz9wUnWxVS65UuX1sjq-113" style="endArrow=none;html=1;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.5714;entryDx=0;entryDy=0;entryPerimeter=0;" target="bvz9wUnWxVS65UuX1sjq-114" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="410" y="820" as="sourcePoint" />
+            <mxPoint x="460" y="770" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="bvz9wUnWxVS65UuX1sjq-116" parent="1" style="pointerEvents=1;verticalLabelPosition=bottom;shadow=0;dashed=0;align=center;html=1;verticalAlign=top;shape=mxgraph.electrical.signal_sources.protective_earth;rotation=-90;" value="" vertex="1">
+          <mxGeometry height="20" width="23.75" x="478.13" y="790" as="geometry" />
+        </mxCell>
+        <mxCell id="bvz9wUnWxVS65UuX1sjq-117" parent="1" style="html=1;shadow=0;dashed=0;align=center;verticalAlign=middle;shape=mxgraph.arrows2.arrow;dy=0;dx=10;notch=0;strokeWidth=1;points=[[1,0.5,0,0,0]];" value="D11" vertex="1">
+          <mxGeometry height="20" width="100" x="105" y="482.17" as="geometry" />
+        </mxCell>
+        <mxCell id="bvz9wUnWxVS65UuX1sjq-120" parent="1" style="html=1;shadow=0;dashed=0;align=center;verticalAlign=middle;shape=mxgraph.arrows2.arrow;dy=0;dx=10;notch=0;strokeWidth=1;points=[[1,0.5,0,0,0]];" value="D12" vertex="1">
+          <mxGeometry height="20" width="100" x="534" y="482.17" as="geometry" />
+        </mxCell>
+        <mxCell id="bvz9wUnWxVS65UuX1sjq-122" parent="1" style="verticalLabelPosition=top;verticalAlign=bottom;shape=mxgraph.electrical.signal_sources.vdd;shadow=0;dashed=0;align=center;strokeWidth=1;fontSize=12;html=1;flipV=1;fillColor=default;legacyAnchorPoints=0;" value="5V" vertex="1">
+          <mxGeometry height="20" width="28.75" x="357.6299999999999" y="370" as="geometry" />
+        </mxCell>
+        <mxCell id="bvz9wUnWxVS65UuX1sjq-63" edge="1" parent="1" source="bvz9wUnWxVS65UuX1sjq-64" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;startArrow=none;startFill=0;endArrow=none;endFill=0;exitX=0.501;exitY=0.09;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;entryPerimeter=0;" target="bvz9wUnWxVS65UuX1sjq-122">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="371.5" y="373" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="bvz9wUnWxVS65UuX1sjq-126" connectable="0" parent="1" style="group;fontSize=12;fontFamily=Helvetica;fontColor=default;labelBackgroundColor=default;" value="C" vertex="1">
+          <mxGeometry height="75" width="150" x="294" y="163.00000000000023" as="geometry" />
+        </mxCell>
+        <mxCell id="bvz9wUnWxVS65UuX1sjq-127" parent="bvz9wUnWxVS65UuX1sjq-126" style="rounded=0;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=10;fontColor=default;fillColor=default;points=[[0,0.5,0,0,0],[0.5,0,0,0,0],[0.5,1,0,0,0],[1,0.5,0,0,0]];labelBackgroundColor=default;" value="HC-SR04 (US3)&lt;br&gt;Ultrasonic Sensor" vertex="1">
+          <mxGeometry height="71.66666666666667" width="150" y="3.3333333333333335" as="geometry" />
+        </mxCell>
+        <mxCell id="bvz9wUnWxVS65UuX1sjq-128" parent="bvz9wUnWxVS65UuX1sjq-126" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontFamily=Helvetica;fontSize=11;fontColor=default;points=[];labelBackgroundColor=default;" value="VCC" vertex="1">
+          <mxGeometry height="25" width="35" x="60" as="geometry" />
+        </mxCell>
+        <mxCell id="bvz9wUnWxVS65UuX1sjq-129" parent="bvz9wUnWxVS65UuX1sjq-126" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontFamily=Helvetica;fontSize=11;fontColor=default;points=[];labelBackgroundColor=default;" value="Trig" vertex="1">
+          <mxGeometry height="25" width="30" y="26.666666666666668" as="geometry" />
+        </mxCell>
+        <mxCell id="bvz9wUnWxVS65UuX1sjq-130" parent="bvz9wUnWxVS65UuX1sjq-126" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontFamily=Helvetica;fontSize=11;fontColor=default;points=[];labelBackgroundColor=default;" value="Echo" vertex="1">
+          <mxGeometry height="25" width="35" x="115" y="26.666666666666668" as="geometry" />
+        </mxCell>
+        <mxCell id="bvz9wUnWxVS65UuX1sjq-131" parent="bvz9wUnWxVS65UuX1sjq-126" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontFamily=Helvetica;fontSize=11;fontColor=default;points=[];labelBackgroundColor=default;" value="GND" vertex="1">
+          <mxGeometry height="25" width="35" x="60" y="50" as="geometry" />
+        </mxCell>
+        <mxCell id="bvz9wUnWxVS65UuX1sjq-132" parent="bvz9wUnWxVS65UuX1sjq-126" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" value="U&lt;sub&gt;x&lt;/sub&gt;" vertex="1">
+          <mxGeometry height="30" width="60" x="7" y="-2.2737367544323206e-13" as="geometry" />
+        </mxCell>
+        <mxCell id="bvz9wUnWxVS65UuX1sjq-133" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;endFill=0;entryX=0.008;entryY=0.502;entryDx=0;entryDy=0;entryPerimeter=0;" target="bvz9wUnWxVS65UuX1sjq-129">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="202" y="202.21666666666692" as="sourcePoint" />
+            <mxPoint x="292" y="202.20000000000005" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="bvz9wUnWxVS65UuX1sjq-134" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.067;entryY=0.493;entryDx=0;entryDy=0;entryPerimeter=0;endArrow=none;endFill=0;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="444" y="201.66999999999996" as="sourcePoint" />
+            <mxPoint x="536" y="201.66999999999996" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="bvz9wUnWxVS65UuX1sjq-135" parent="1" style="pointerEvents=1;verticalLabelPosition=bottom;shadow=0;dashed=0;align=center;html=1;verticalAlign=top;shape=mxgraph.electrical.signal_sources.protective_earth;" value="" vertex="1">
+          <mxGeometry height="20" width="23.75" x="359.625" y="280" as="geometry" />
+        </mxCell>
+        <mxCell id="bvz9wUnWxVS65UuX1sjq-136" edge="1" parent="1" source="bvz9wUnWxVS65UuX1sjq-131" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;endFill=0;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="371.5" y="283" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="bvz9wUnWxVS65UuX1sjq-137" parent="1" style="html=1;shadow=0;dashed=0;align=center;verticalAlign=middle;shape=mxgraph.arrows2.arrow;dy=0;dx=10;notch=0;strokeWidth=1;points=[[1,0.5,0,0,0]];" value="D10" vertex="1">
+          <mxGeometry height="20" width="100" x="534" y="192.17000000000002" as="geometry" />
+        </mxCell>
+        <mxCell id="bvz9wUnWxVS65UuX1sjq-138" parent="1" style="verticalLabelPosition=top;verticalAlign=bottom;shape=mxgraph.electrical.signal_sources.vdd;shadow=0;dashed=0;align=center;strokeWidth=1;fontSize=12;html=1;flipV=1;fillColor=default;legacyAnchorPoints=0;" value="5V" vertex="1">
+          <mxGeometry height="20" width="28.75" x="357.6299999999999" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="bvz9wUnWxVS65UuX1sjq-139" edge="1" parent="1" source="bvz9wUnWxVS65UuX1sjq-128" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;startArrow=none;startFill=0;endArrow=none;endFill=0;exitX=0.501;exitY=0.09;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;entryPerimeter=0;" target="bvz9wUnWxVS65UuX1sjq-138">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="371.5" y="83" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="bvz9wUnWxVS65UuX1sjq-140" parent="1" style="html=1;shadow=0;dashed=0;align=center;verticalAlign=middle;shape=mxgraph.arrows2.arrow;dy=0;dx=10;notch=0;strokeWidth=1;points=[[1,0.5,0,0,0]];" value="D9" vertex="1">
+          <mxGeometry height="20" width="100" x="102" y="192.17000000000002" as="geometry" />
+        </mxCell>
+        <mxCell id="bvz9wUnWxVS65UuX1sjq-141" parent="1" style="html=1;shadow=0;dashed=0;align=center;verticalAlign=middle;shape=mxgraph.arrows2.arrow;dy=0;dx=10;notch=0;strokeWidth=1;points=[[1,0.5,0,0,0]];" value="D5" vertex="1">
+          <mxGeometry height="20" width="100" x="100" y="690" as="geometry" />
+        </mxCell>
+        <mxCell id="bvz9wUnWxVS65UuX1sjq-142" parent="1" style="html=1;shadow=0;dashed=0;align=center;verticalAlign=middle;shape=mxgraph.arrows2.arrow;dy=0;dx=10;notch=0;strokeWidth=1;points=[[1,0.5,0,0,0]];" value="D6" vertex="1">
+          <mxGeometry height="20" width="100" x="100" y="790" as="geometry" />
+        </mxCell>
+        <mxCell id="bvz9wUnWxVS65UuX1sjq-143" parent="1" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" value="Subsystem 4 Circuit Diagram" vertex="1">
+          <mxGeometry height="160" width="370" x="444" y="920" as="geometry" />
+        </mxCell>
+        <mxCell id="bvz9wUnWxVS65UuX1sjq-144" parent="bvz9wUnWxVS65UuX1sjq-143" style="text;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" value="&lt;div align=&quot;center&quot;&gt;This is the “last chance” overheight detection system, consisting&lt;br&gt;of a set of overheight detection ultrasonic&lt;br&gt;sensor (US3/US4), a set of red/green traffic lights (TL3), and two&lt;br&gt;sets of two red warning lights (WL2) which&lt;br&gt;are used to indicate tunnel closure when flashing.&lt;br&gt;Team B18- Santhosh Balaji Kala&lt;br&gt;Revision 2 7/9/26&lt;/div&gt;" vertex="1">
+          <mxGeometry height="130" width="370" y="30" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
