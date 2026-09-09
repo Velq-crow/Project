@@ -41,15 +41,6 @@ board.set_pin_mode_sonar(triggerPinUS4,echoPinUS4,timeout=200000)
 # sleep to configure pins
 time.sleep(1)
 
-def shift_out(value, msb_first=True):
-    board.digital_write(LATCH_PIN, 0)
-    bit_range = range(7, -1, -1) if msb_first else range(8)
-    for i in bit_range:
-        bit = (value >> i) & 1
-        board.digital_write(DATA_PIN, bit)
-        board.digital_write(CLOCK_PIN, 1)
-        board.digital_write(CLOCK_PIN, 0)
-    board.digital_write(LATCH_PIN, 1)
 
 def heightDiff(distance):
     """
