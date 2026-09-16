@@ -5,9 +5,6 @@ DATA_PIN  = 12
 CLOCK_PIN = 13
 LATCH_PIN = 11
 
-from pymata4 import pymata4
-import time
-
 board = pymata4.Pymata4()
 
 board.set_pin_mode_digital_output(DATA_PIN)

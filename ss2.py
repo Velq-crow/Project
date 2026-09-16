@@ -66,26 +66,26 @@ def update_3_chips(chip3_val, chip2_val, chip1_val):
     combined = (chip3_val << 16) | (chip2_val << 8) | chip1_val
     shift_out(combined, num_bits=24)
 
-def set_shift1(value):
-    update_3_chips(0x00, 0x00, value)
+def set_shift2(value):
+    update_3_chips(0x00, value, 0x00)
 
 def tl4_cycle_state():
-    set_shift1(RED_PED | GREEN_TL4 | RED_TL5)
+    set_shift2(RED_PED | GREEN_TL4 | RED_TL5)
 
 def tl4_cycle_state_off():
-    set_shift1(RED_PED | YELLOW_TL4 | RED_TL5)
+    set_shift2(RED_PED | YELLOW_TL4 | RED_TL5)
 
 def tl5_cycle_state():
-    set_shift1(RED_PED | GREEN_TL5 | RED_TL4)
+    set_shift2(RED_PED | GREEN_TL5 | RED_TL4)
 
 def tl5_cycle_state_off():
-    set_shift1(RED_PED | YELLOW_TL5 | RED_TL4)
+    set_shift2(RED_PED | YELLOW_TL5 | RED_TL4)
 
 def cycle_state_pedestrian(BOOL):
     if BOOL == True:
-        set_shift1(GREEN_PED | RED_TL4 | RED_TL5)
+        set_shift2(GREEN_PED | RED_TL4 | RED_TL5)
     elif BOOL == False:
-        set_shift1(RED_PED | RED_TL4 | RED_TL5)
+        set_shift2(RED_PED | RED_TL4 | RED_TL5)
 
     
 def pedestrian_lights(BOOL):
