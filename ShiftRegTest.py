@@ -1,9 +1,9 @@
 from pymata4 import pymata4
 import time
 
-DATA_PIN  = 11
-CLOCK_PIN = 12
-LATCH_PIN = 8
+DATA_PIN  = 12
+CLOCK_PIN = 13
+LATCH_PIN = 11
 
 from pymata4 import pymata4
 import time
@@ -52,9 +52,11 @@ def test_all_leds():
 def main():
     while True:
         try: 
+            # shift_out(0xFF)
             test_all_leds()
             time.sleep(3)
         except KeyboardInterrupt:
+            update_3_chips(0x00, 0x00, 0x00)
             print("\nExiting program")
             time.sleep(1)
             break
