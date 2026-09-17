@@ -7,6 +7,8 @@
 from pymata4 import pymata4
 import time
 
+board = pymata4.Pymata4()
+
 # Constants
 TOP_HEIGHT = 10 #cm
 pollingRate  = 0.5   # seconds
@@ -28,6 +30,12 @@ TL3_MASK = TL3_RED | TL3_GREEN
 
 chip3_state = 0x00
 
+overheight = {
+    "us1": False, "us2": False,
+    "us3": False, "us4": False,
+    "us5": False,
+}
+
 # US5 (TL6 / ss3)
 echoPinUS5    = 3
 triggerPinUS5 = 4
@@ -44,13 +52,6 @@ echoPinUS4    = 7
 acceptableError = 10  # percent
 ss4_phase = "normal"
 
-overheight = {
-    "us1": False, "us2": False,
-    "us3": False, "us4": False,
-    "us5": False,
-}
-
-board = pymata4.Pymata4()
 
 board.set_pin_mode_digital_output(DATA_PIN)
 board.set_pin_mode_digital_output(CLOCK_PIN)
@@ -83,7 +84,7 @@ def update_3_chips(chip3_val, chip2_val, chip1_val):
 def set_shift3(mask, bits_on):
     global _chip3_state
     _chip3_state = (_chip3_state & ~mask) | (bits_on & mask)
-    update_3_chips(_chip3_state, 0x00, 0x00)
+    update_3_chips(0x00, 0x00, _chip3_state)
 
 def heightDiff(distance):
     """
@@ -115,22 +116,11 @@ def yellow_state_ss3():
 def is_tl3_green():
     return (_chip3_state & TL3_GREEN) != 0
 
-def ss4_step(now, is_over):
-    global ss4_phase
-    if ss4_phase == "normal":
-        if is_over:
-            overheight_state_ss4()
-            ss4_phase = "overheight"
-    elif ss4_phase == "overheight":
-        if us5_just_exited and not any_overheight():
-            normal_state_ss4()
-            ss4_phase = "normal"
-
-def ss3_step(now, is_over):
+def ss3_step(now, is_overheight):
     global ss3_phase, ss3_phase_start
 
     if ss3_phase == "normal":
-        if is_over:
+        if is_overheight:
             overheight_state_ss3()
             ss3_phase, ss3_phase_start = "green", now
 
@@ -144,10 +134,10 @@ def ss3_step(now, is_over):
             normal_state_ss3()
             ss3_phase = "normal"
 
-def ss4_step (is_over, us5_just_exited):
+def ss4_step (is_overheight, us5_just_exited):
     global ss4_phase
     if ss4_phase == "normal":
-        if is_over:
+        if is_overheight:
             overheight_state_ss4()
             ss4_phase = "overheight"
     elif ss4_phase == "overheight":

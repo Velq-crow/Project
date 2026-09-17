@@ -1,240 +1,178 @@
+# Subsystem 4 Eng1013
+# Created Date:6/9/26
+# Created By: Ketan
+# Version: 1.3
+
 from pymata4 import pymata4
 import time
 
 board = pymata4.Pymata4()
 
-# --------------------------------
-# ULTRASONIC SENSORS
-# --------------------------------
-US1_TRIG = 2
-US1_ECHO = 3
+# Constants
+TOP_HEIGHT = 10 #cm
+pollingRate  = 0.5   # seconds
+overHeightLimit = 4
 
-US2_TRIG = 4
-US2_ECHO = 5
+DATA_PIN  = 12
+CLOCK_PIN = 13
+LATCH_PIN = 11
 
-# --------------------------------
-# TL1 LIGHTS
-# --------------------------------
-TL1_RED = 6
-TL1_YELLOW = 7
-TL1_GREEN = 8
+BUZZER_PA1 = 0x80  # Pin 1
+GREEN_TL1  = 0x40  # Pin 2
+GREEN_TL2  = 0x20  # Pin 3
+YELLOW_TL1 = 0x10  # Pin 4
+YELLOW_TL2 = 0x08  # Pin 5
+RED_TL1    = 0x04  # Pin 6
+RED_TL2    = 0x02  # Pin 7
+LIGHTS_WL1 = 0x01  # Pin 8
 
-# --------------------------------
-# TL2 LIGHTS
-# --------------------------------
-TL2_RED = 9
-TL2_YELLOW = 10
-TL2_GREEN = 11
+TL1_MASK = GREEN_TL1 | YELLOW_TL1 | RED_TL1
+TL2_MASK = GREEN_TL2 | YELLOW_TL2 | RED_TL2
+PA1_MASK = BUZZER_PA1
+WL1_MASK = LIGHTS_WL1
 
-# --------------------------------
-# PA1 BUZZER ENABLE
-# (connected to external 555/556)
-# --------------------------------
-PA1 = 12
+_chip1_state = 0x00
 
-# --------------------------------
-# OPTIONAL POWER PIN
-# --------------------------------
-FIVE_VOLT_PIN = 13
+overheight = {
+    "us1": False, "us2": False,
+    "us3": False, "us4": False,
+    "us5": False,
+}
 
-# --------------------------------
-# SETUP DIGITAL OUTPUTS
-# --------------------------------
-for pin in range(6, 14):
-    board.set_pin_mode_digital_output(pin)
+# US1 & TL1
+echoPinUS1    = 3
+triggerPinUS1 = 4
+ss1_TL1_phase = "green"   # red, green, yellow
+ss1_TL1_phase_start = 0.0
 
-# Turn pin 13 HIGH
-board.digital_write(FIVE_VOLT_PIN, 1)
+# US2
+echoPinUS2    = 3
+triggerPinUS2 = 4
+ss1_TL2_phase = "green"   # red, green, yellow
+ss1_TL2_phase_start = 0.0
 
-# --------------------------------
-# SETUP SONAR
-# --------------------------------
-board.set_pin_mode_sonar(US1_TRIG, US1_ECHO)
-board.set_pin_mode_sonar(US2_TRIG, US2_ECHO)
+board.set_pin_mode_digital_output(DATA_PIN)
+board.set_pin_mode_digital_output(CLOCK_PIN)
+board.set_pin_mode_digital_output(LATCH_PIN)
 
-# --------------------------------
-# USER CONFIGURATION
-# --------------------------------
-try:
-    userInput = input(
-        "Set Overheight Limit in metres (default 4.0): "
-    ).strip()
 
-    setDistance = float(userInput) if userInput else 4.0
+board.set_pin_mode_sonar(triggerPinUS1, echoPinUS1, timeout=200000)
+board.set_pin_mode_sonar(triggerPinUS2, echoPinUS2, timeout=200000)
 
-except ValueError:
-    print("Invalid input. Using default 4.0m")
-    setDistance = 4.0
 
-# Convert metres to cm
-setHeight = setDistance * 100
+time.sleep(1)
 
-# Time threshold for same vehicle
-sameVehicleTime = 20
+def shift_out(value, num_bits=8, msb_first=True):
+    board.digital_write(LATCH_PIN, 0)
+    bit_range = range(num_bits - 1, -1, -1) if msb_first else range(num_bits)
+    for i in bit_range:
+        bit = (value >> i) & 1
+        board.digital_write(DATA_PIN, bit)
+        board.digital_write(CLOCK_PIN, 1)
+        board.digital_write(CLOCK_PIN, 0)
+    board.digital_write(LATCH_PIN, 1)
 
-# Last US1 trigger time
-lastUS1Detection = 0
+def update_3_chips(chip3_val, chip2_val, chip1_val):
+    combined = (chip3_val << 16) | (chip2_val << 8) | chip1_val
+    shift_out(combined, num_bits=24)
 
-# --------------------------------
-# TRAFFIC LIGHT FUNCTIONS
-# --------------------------------
-def tl1_green():
-    board.digital_write(TL1_RED, 0)
-    board.digital_write(TL1_YELLOW, 0)
-    board.digital_write(TL1_GREEN, 1)
+def set_shift1(mask, bits_on):
+    global _chip1_state
+    _chip1_state = (_chip1_state & ~mask) | (bits_on & mask)
+    update_3_chips(_chip1_state, 0x00, 0x00)
 
-def tl1_yellow():
-    board.digital_write(TL1_RED, 0)
-    board.digital_write(TL1_YELLOW, 1)
-    board.digital_write(TL1_GREEN, 0)
+def heightDiff(distance):
+    """
+    Used to minus the distance measured by the ultrasonic sensor (US5) from the TOP_HEIGHT to give actual height of the vechicle.
 
-def tl1_red():
-    board.digital_write(TL1_RED, 1)
-    board.digital_write(TL1_YELLOW, 0)
-    board.digital_write(TL1_GREEN, 0)
+        Parameters:
+            distance: To be used in calculation TOP_HEIGHT - distance[]
 
-def tl2_green():
-    board.digital_write(TL2_RED, 0)
-    board.digital_write(TL2_YELLOW, 0)
-    board.digital_write(TL2_GREEN, 1)
+        Returns:
+            Returns TOP_HEIGHT - distance[0]
+    """
+    return TOP_HEIGHT - distance[0]
 
-def tl2_yellow():
-    board.digital_write(TL2_RED, 0)
-    board.digital_write(TL2_YELLOW, 1)
-    board.digital_write(TL2_GREEN, 0)
+def normal_state_ss1_TL1():
+    set_shift1(TL1_MASK,GREEN_TL1)
 
-def tl2_red():
-    board.digital_write(TL2_RED, 1)
-    board.digital_write(TL2_YELLOW, 0)
-    board.digital_write(TL2_GREEN, 0)
+def normal_state_ss1_TL2():
+    set_shift1(TL2_MASK,GREEN_TL2)
 
-# --------------------------------
-# START NORMAL STATE
-# --------------------------------
-tl1_green()
-tl2_green()
+def yellow_state_ss1_TL1():
+    set_shift1(TL1_MASK,YELLOW_TL1)
 
-print("Approach Height Detection System Running")
-print(f"Overheight limit set to {setDistance}m")
+def yellow_state_ss1_TL2():
+    set_shift1(TL2_MASK,YELLOW_TL2)
 
-# --------------------------------
-# MAIN LOOP
-# --------------------------------
-while True:
-    print(f"US1 Distance: {distance1} cm | US2 Distance: {distance2} cm")
-    # Read sensors
-    result1 = board.sonar_read(US1_TRIG)
-    result2 = board.sonar_read(US2_TRIG)
+def overheight_state_ss1_TL1():
+    set_shift1(TL1_MASK,RED_TL1)
 
-    distance1 = result1[0] if result1 and result1[0] > 0 else None
-    distance2 = result2[0] if result2 and result2[0] > 0 else None
+def overheight_state_ss1_TL2():
+    set_shift1(TL2_MASK,RED_TL2)
 
-    # Print sensor distances
-    print(f"US1 Distance: {distance1} cm | US2 Distance: {distance2} cm")
+def ss1_step(now, is_overheight_US1, is_overheight_US2):
+    global ss1_TL1_phase, ss1_TL1_phase_start, ss1_TL2_phase, ss1_TL2_phase_start
 
-    currentTime = time.time()
+    if ss1_TL1_phase == "green":
+        if is_overheight_US1:
+            yellow_state_ss1_TL1()
+            ss1_TL1_phase, ss1_TL1_phase_start = "yellow", now
 
-    # --------------------------------
-    # US1 OVERHEIGHT DETECTION
-    # --------------------------------
-    if distance1 is not None:
+    elif ss1_TL1_phase == "yellow":
+        if now - ss1_TL1_phase_start >= 1:
+            overheight_state_ss1_TL1()
+            ss1_TL1_phase, ss1_TL1_phase_start = "red", now
 
-        if distance1 < setHeight:
+    elif ss1_TL1_phase == "red":
+        if now - ss1_TL1_phase_start >= 30:
+            normal_state_ss1_TL1()
+            ss1_TL1_phase = "green"
 
-            detectedHeight = round((setHeight - distance1) / 100, 2)
+    if ss1_TL2_phase == "green":
+        if is_overheight_US2 and ss1_TL1_phase == "green":
+            yellow_state_ss1_TL1()
+            ss1_TL1_phase, ss1_TL1_phase_start = "yellow", now
+            yellow_state_ss1_TL2()
+            ss1_TL2_phase, ss1_TL2_phase_start = "yellow", now
 
-            print("--------------------------------")
-            print("OVERHEIGHT VEHICLE DETECTED BY US1")
-            print(f"Detected Height Above Limit: {detectedHeight}m")
-            print(f"Time: {time.ctime()}")
-            print("--------------------------------")
+    elif ss1_TL2_phase == "yellow":
+        if now - ss1_TL1_phase_start >= 1:
+            overheight_state_ss1_TL1()
+            ss1_TL2_phase, ss1_TL1_phase_start = "red", now
 
-            lastUS1Detection = currentTime
+    elif ss1_TL2_phase == "red":
+        if now - ss1_TL1_phase_start >= 30:
+            normal_state_ss1_TL1()
+            ss1_TL2_phase = "green"
 
-            # Turn buzzer ON
-            board.digital_write(PA1, 1)
+def main():
+    time.sleep(1)
+    while True:
+        try: 
+            lastPollTime = time.time()
+            while True:
+                currentTime = time.time()
+                if (currentTime - lastPollTime) >= pollingRate:
+                    lastPollTime = currentTime
 
-            # TL1 yellow
-            tl1_yellow()
+                    # reads & calcuations
+                    heightUS1 = heightDiff(board.sonar_read(triggerPinUS1)) # height of veh from us3 - ss4
+                    heightUS2 = heightDiff(board.sonar_read(triggerPinUS2)) # height of veh from us4 - ss4
+
+                    overheight["us1"] = heightUS1 >= overHeightLimit
+                    overheight["us2"] = heightUS2 >= overHeightLimit
+
+                    normal_state_ss1_TL1()
+                    normal_state_ss1_TL2()
+
+                    ss1_step(currentTime,overheight["us1"],overheight["us2"])
+        except KeyboardInterrupt:
+            update_3_chips(0x00, 0x00, 0x00)
+            print("\nExiting program")
             time.sleep(1)
+            break
 
-            # TL1 red
-            tl1_red()
-
-            # Hold red 30s
-            time.sleep(30)
-
-            # Back to green
-            tl1_green()
-
-            # Turn buzzer OFF
-            board.digital_write(PA1, 0)
-
-    # --------------------------------
-    # US2 OVERHEIGHT DETECTION
-    # --------------------------------
-    if distance2 is not None:
-
-        if distance2 < setHeight:
-
-            print("--------------------------------")
-            print("OVERHEIGHT VEHICLE DETECTED BY US2")
-            print(f"Time: {time.ctime()}")
-            print("--------------------------------")
-
-            # Turn buzzer ON
-            board.digital_write(PA1, 1)
-
-            # Determine same vehicle
-            sameVehicle = (
-                currentTime - lastUS1Detection
-            ) <= sameVehicleTime
-
-            # --------------------------------
-            # SAME VEHICLE
-            # --------------------------------
-            if sameVehicle:
-
-                print("US2 detected SAME vehicle as US1")
-
-                # TL2 yellow
-                tl2_yellow()
-                time.sleep(1)
-
-                # TL2 red
-                tl2_red()
-
-                # Hold red
-                time.sleep(30)
-
-                # Return green
-                tl2_green()
-
-            # --------------------------------
-            # DIFFERENT VEHICLE
-            # --------------------------------
-            else:
-
-                print("US2 detected DIFFERENT vehicle")
-
-                # Both yellow
-                tl1_yellow()
-                tl2_yellow()
-
-                time.sleep(1)
-
-                # Both red
-                tl1_red()
-                tl2_red()
-
-                # Hold red
-                time.sleep(30)
-
-                # Return green
-                tl1_green()
-                tl2_green()
-
-            # Turn buzzer OFF
-            board.digital_write(PA1, 0)
-
-    time.sleep(0.2)
+    board.shutdown()
+if __name__ == "__main__":
+    main()
