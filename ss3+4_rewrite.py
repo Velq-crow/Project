@@ -12,7 +12,7 @@ board = pymata4.Pymata4()
 # Constants
 TOP_HEIGHT = 10 #cm
 pollingRate  = 0.5   # seconds
-calibrated_value_day = 350
+calibrated_value_day = 150
 
 DATA_PIN  = 12
 CLOCK_PIN = 13
@@ -212,14 +212,14 @@ def main():
                     us5_just_exited = us5_was_overheight and not overheight["us5"]
                     us5_was_overheight = overheight["us5"]
                     
-                    print(f"US3 height: {heightUS3:.2f} cm \n US4 height: {heightUS4:.2f} cm \n US5 height: {heightUS5:.2f} cm")
+                    print(f"US3 height: {heightUS3:.2f} cm \n US4 height: {heightUS4:.2f} cm \n US5 height: {heightUS5:.2f} cm \n DS1 reading:{valueDS1:.2f}")
                     # execution & logic
                     is_over_ss4 = overheight["us3"] and lowerErrorBound <= heightUS4 <= upperErrorBound
 
                     #ss4 logic
                     ss4_step(is_over_ss4,us5_just_exited)
                     #ss3 logic
-                    ss3_step(currentTime,overheight["us5"])
+                    ss3_step(currentTime,overheight["us5"],ldr_reading["ldr_DS1"])
 
         except KeyboardInterrupt:
             update_3_chips(0x00, 0x00, 0x00)
