@@ -39,6 +39,8 @@ overheight = {
     "us5": False,
 }
 
+ss1_was_overridden = False
+
 # US1 & TL1
 echoPinUS1    = 3
 triggerPinUS1 = 4
@@ -111,9 +113,35 @@ def overheight_state_ss1_TL1():
 def overheight_state_ss1_TL2():
     set_shift1(TL2_MASK,RED_TL2)
 
+def enter_override():
+    set_shift1(TL1_MASK | TL2_MASK | PA1_MASK | WL1_MASK, RED_TL1 | RED_TL2 | BUZZER_PA1 | LIGHTS_WL1)
+
+def exit_override():
+    # PA1/WL1 bits are in mask but not in bits_on -> cleared
+    set_shift1(TL1_MASK | TL2_MASK | PA1_MASK | WL1_MASK, GREEN_TL1 | GREEN_TL2)
+
+
 def ss1_step(now, is_overheight_US1, is_overheight_US2):
     global ss1_TL1_phase, ss1_TL1_phase_start, ss1_TL2_phase, ss1_TL2_phase_start
+    global ss1_was_overridden
 
+    override = overheight["us3"] and overheight["us4"]
+
+    if override:
+        if not ss1_was_overridden:
+            enter_override()
+            ss1_TL1_phase, ss1_TL1_phase_start = "red", now
+            ss1_TL2_phase, ss1_TL2_phase_start = "red", now
+            ss1_was_overridden = True
+        return
+
+    if ss1_was_overridden:
+        exit_override()
+        ss1_TL1_phase, ss1_TL1_phase_start = "green", now
+        ss1_TL2_phase, ss1_TL2_phase_start = "green", now
+        ss1_was_overridden = False
+
+    # --- 1.R2: TL1 driven by US1 ---
     if ss1_TL1_phase == "green":
         if is_overheight_US1:
             yellow_state_ss1_TL1()
@@ -131,20 +159,30 @@ def ss1_step(now, is_overheight_US1, is_overheight_US2):
 
     if ss1_TL2_phase == "green":
         if is_overheight_US2 and ss1_TL1_phase == "green":
+
             yellow_state_ss1_TL1()
             ss1_TL1_phase, ss1_TL1_phase_start = "yellow", now
+
+            yellow_state_ss1_TL2()
+            ss1_TL2_phase, ss1_TL2_phase_start = "yellow", now
+
+        elif is_overheight_US2 and ss1_TL1_phase != "green":
             yellow_state_ss1_TL2()
             ss1_TL2_phase, ss1_TL2_phase_start = "yellow", now
 
     elif ss1_TL2_phase == "yellow":
-        if now - ss1_TL1_phase_start >= 1:
-            overheight_state_ss1_TL1()
-            ss1_TL2_phase, ss1_TL1_phase_start = "red", now
+        if now - ss1_TL2_phase_start >= 1:
+            overheight_state_ss1_TL2()
+            ss1_TL2_phase, ss1_TL2_phase_start = "red", now
 
     elif ss1_TL2_phase == "red":
-        if now - ss1_TL1_phase_start >= 30:
-            normal_state_ss1_TL1()
+        if now - ss1_TL2_phase_start >= 30:
+            normal_state_ss1_TL2()
             ss1_TL2_phase = "green"
+
+    
+        
+
 
 def main():
     time.sleep(1)
