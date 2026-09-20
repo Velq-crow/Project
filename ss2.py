@@ -86,7 +86,6 @@ def cycle_state_pedestrian(BOOL):
         set_shift2(GREEN_PED | RED_TL4 | RED_TL5)
     elif BOOL == False:
         set_shift2(RED_PED | RED_TL4 | RED_TL5)
-
     
 def pedestrian_lights(BOOL):
     if BOOL == True:
@@ -104,6 +103,7 @@ def pedestrian_lights(BOOL):
         if currentTimered-lastTimeRed>2:
             break
         cycle_state_pedestrian(RED)
+
 
 
 def main():

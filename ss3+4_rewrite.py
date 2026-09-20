@@ -113,9 +113,6 @@ def overheight_state_ss3():
 def yellow_state_ss3():
     set_shift3(TL6_MASK, TL6_YELLOW)
 
-def is_tl3_green():
-    return (_chip3_state & TL3_GREEN) != 0
-
 def ss3_step(now, is_overheight):
     global ss3_phase, ss3_phase_start
 
@@ -125,11 +122,11 @@ def ss3_step(now, is_overheight):
             ss3_phase, ss3_phase_start = "green", now
 
     elif ss3_phase == "green":
-        if now - ss3_phase_start >= 5:
+        if now - ss3_phase_start >= 5: #time green
             yellow_state_ss3()
             ss3_phase, ss3_phase_start = "yellow", now
 
-    elif ss3_phase == "yellow":
+    elif ss3_phase == "yellow": # time yellow
         if now - ss3_phase_start >= 3:
             normal_state_ss3()
             ss3_phase = "normal"

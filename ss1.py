@@ -167,6 +167,7 @@ def main():
                     normal_state_ss1_TL2()
 
                     ss1_step(currentTime,overheight["us1"],overheight["us2"])
+                    
         except KeyboardInterrupt:
             update_3_chips(0x00, 0x00, 0x00)
             print("\nExiting program")
