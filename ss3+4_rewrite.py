@@ -12,6 +12,7 @@ board = pymata4.Pymata4()
 # Constants
 TOP_HEIGHT = 10 #cm
 pollingRate  = 0.5   # seconds
+calibrated_value_day = 350
 
 DATA_PIN  = 12
 CLOCK_PIN = 13
@@ -36,6 +37,11 @@ overheight = {
     "us5": False,
 }
 
+ldr_reading = {
+    "ldr_DS1": True,
+    "ldr_DS2": True
+}
+
 # US5 (TL6 / ss3)
 echoPinUS5    = 3
 triggerPinUS5 = 4
@@ -52,6 +58,8 @@ echoPinUS4    = 7
 acceptableError = 10  # percent
 ss4_phase = "normal"
 
+ldrPinDS1 = 0
+
 
 board.set_pin_mode_digital_output(DATA_PIN)
 board.set_pin_mode_digital_output(CLOCK_PIN)
@@ -61,6 +69,7 @@ board.set_pin_mode_digital_output(LATCH_PIN)
 board.set_pin_mode_sonar(triggerPinUS5, echoPinUS5, timeout=200000)
 board.set_pin_mode_sonar(triggerPinUS3, echoPinUS3, timeout=200000)
 board.set_pin_mode_sonar(triggerPinUS4, echoPinUS4, timeout=200000)
+board.set_pin_mode_analog_input(ldrPinDS1)
 
 time.sleep(1)
 
@@ -113,8 +122,13 @@ def overheight_state_ss3():
 def yellow_state_ss3():
     set_shift3(TL6_MASK, TL6_YELLOW)
 
-def ss3_step(now, is_overheight):
+def ss3_step(now, is_overheight,is_day):
     global ss3_phase, ss3_phase_start
+
+    if is_day:
+        green_time = 5
+    else:
+        green_time = 10
 
     if ss3_phase == "normal":
         if is_overheight:
@@ -122,7 +136,7 @@ def ss3_step(now, is_overheight):
             ss3_phase, ss3_phase_start = "green", now
 
     elif ss3_phase == "green":
-        if now - ss3_phase_start >= 5: #time green
+        if now - ss3_phase_start >= green_time: #time green
             yellow_state_ss3()
             ss3_phase, ss3_phase_start = "yellow", now
 
@@ -182,6 +196,9 @@ def main():
                     heightUS3 = heightDiff(board.sonar_read(triggerPinUS3)) # height of veh from us3 - ss4
                     heightUS4 = heightDiff(board.sonar_read(triggerPinUS4)) # height of veh from us4 - ss4
                     heightUS5 = heightDiff(board.sonar_read(triggerPinUS5)) # height of veh from us5 - ss3
+
+                    valueDS1 = board.analog_read(ldrPinDS1)
+                    
                     
                     lowerErrorBound = heightUS3*(1- acceptableError/100)
                     upperErrorBound = heightUS3*(1+ acceptableError/100)
@@ -189,6 +206,8 @@ def main():
                     overheight["us3"] = heightUS3 >= overHeightLimit
                     overheight["us4"] = heightUS4 >= overHeightLimit
                     overheight["us5"] = heightUS5 >= overHeightLimit
+
+                    ldr_reading["ldr_DS1"] = valueDS1 >= calibrated_value_day
 
                     us5_just_exited = us5_was_overheight and not overheight["us5"]
                     us5_was_overheight = overheight["us5"]
