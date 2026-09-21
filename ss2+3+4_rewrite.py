@@ -81,6 +81,7 @@ ss2_flash_last_toggle = 0.0
 
 
 ldrPinDS1 = 0
+ldrPinDS2 = 1
 pedestrianButton=2
 
 GREEN = True
@@ -99,6 +100,8 @@ board.set_pin_mode_sonar(triggerPinUS5, echoPinUS5, timeout=200000)
 board.set_pin_mode_sonar(triggerPinUS3, echoPinUS3, timeout=200000)
 board.set_pin_mode_sonar(triggerPinUS4, echoPinUS4, timeout=200000)
 board.set_pin_mode_analog_input(ldrPinDS1)
+board.set_pin_mode_analog_input(ldrPinDS2)
+
 
 time.sleep(1)
 
@@ -175,12 +178,14 @@ def cycle_state_pedestrian(state):
     else:
         set_shift2(PED_MASK, RED_PED)
 #----
-def ss2_step(now):
+def ss2_step(now,is_day):
     global ss2_state, ss2_state_start, ss2_ped_requested
     global ss2_flash_state, ss2_flash_last_toggle
 
     elapsed = now - ss2_state_start
-    
+    tl4_green_time = 20 if is_day else 30
+    tl5_green_time = 10 if is_day else 5
+
     if ss2_state in ("TL4_GREEN", "TL5_GREEN", "TL4_YELLOW", "TL5_YELLOW"):
         if board.digital_read(pedestrianButton)[0] == 0:
             print("button pressed")
@@ -192,7 +197,7 @@ def ss2_step(now):
             tl4_cycle_state_off()
             ss2_ped_requested = False
             ss2_state, ss2_state_start = "PED_YELLOW", now
-        elif elapsed > 20:
+        elif elapsed > tl4_green_time:
             tl4_cycle_state_off()
             ss2_state, ss2_state_start = "TL4_YELLOW", now
  
@@ -209,7 +214,7 @@ def ss2_step(now):
             tl5_cycle_state_off()
             ss2_ped_requested = False
             ss2_state, ss2_state_start = "PED_YELLOW", now
-        elif elapsed > 10:
+        elif elapsed > tl5_green_time:
             tl5_cycle_state_off()
             ss2_state, ss2_state_start = "TL5_YELLOW", now
  
@@ -243,11 +248,8 @@ def ss2_step(now):
 
 def ss3_step(now, is_overheight,is_day):
     global ss3_phase, ss3_phase_start
-
-    if is_day:
-        green_time = 5
-    else:
-        green_time = 10
+    
+    green_time = 5 if is_day else 10
 
     if ss3_phase == "normal":
         if is_overheight:
@@ -304,8 +306,6 @@ def main():
                 except ValueError:
                     print("Invalid input. Please enter a whole number.")
 
-            normal_state_ss3()
-            normal_state_ss4()
 
 
             lastPollTime = time.time()
@@ -321,7 +321,7 @@ def main():
                     heightUS5 = heightDiff(board.sonar_read(triggerPinUS5)) # height of veh from us5 - ss3
 
                     valueDS1 = board.analog_read(ldrPinDS1)[0]
-                    
+                    valueDS2 = board.analog_read(ldrPinDS2)[0]
                     
                     lowerErrorBound = heightUS3*(1- acceptableError/100)
                     upperErrorBound = heightUS3*(1+ acceptableError/100)
@@ -331,6 +331,7 @@ def main():
                     overheight["us5"] = heightUS5 >= overHeightLimit
 
                     ldr_reading["ldr_DS1"] = valueDS1 >= calibrated_value_day
+                    ldr_reading["ldr_DS2"] = valueDS2 >= calibrated_value_day
 
                     us5_just_exited = us5_was_overheight and not overheight["us5"]
                     us5_was_overheight = overheight["us5"]
@@ -344,7 +345,7 @@ def main():
                     #ss3 logic
                     ss3_step(currentTime,overheight["us5"],ldr_reading["ldr_DS1"])
                     #ss2
-                    ss2_step(currentTime)
+                    ss2_step(currentTime,ldr_reading["ldr_DS2"])
 
         except KeyboardInterrupt:
             update_3_chips(0x00, 0x00, 0x00)
