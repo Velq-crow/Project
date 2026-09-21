@@ -12,9 +12,9 @@ board = pymata4.Pymata4()
 pollingTime = 0.2
 
 
-DATA_PIN  = 13
-CLOCK_PIN = 11
-LATCH_PIN = 12
+DATA_PIN  = 12
+CLOCK_PIN = 13
+LATCH_PIN = 11
 """
 Shift 1 
 Pin 1: Red ped
@@ -29,14 +29,14 @@ tl4 is right side
 tl5 is left side
 """
 
-RED_TL5    = 0x80  # Pin 8
-RED_TL4    = 0x40  # Pin 7
-YELLOW_TL5 = 0x20  # Pin 6
-YELLOW_TL4 = 0x10  # Pin 5
-GREEN_TL5  = 0x08  # Pin 4
-GREEN_TL4  = 0x04  # Pin 3
-RED_PED    = 0x02  # Pin 2
-GREEN_PED  = 0x01  # Pin 1
+RED_PED    = 0x80  # Pin 1
+GREEN_TL4  = 0x40  # Pin 2
+GREEN_TL5  = 0x20  # Pin 3
+YELLOW_TL4 = 0x10  # Pin 4
+YELLOW_TL5 = 0x08  # Pin 5
+RED_TL4    = 0x04  # Pin 6
+RED_TL5    = 0x02  # Pin 7
+GREEN_PED  = 0x01  # Pin 8
 
 GREEN = True
 RED = False
@@ -44,14 +44,11 @@ TL4 = True
 TL5 = False
 #PB1/2
 pedestrianButton=2
-flashingPin=6
 
 #Configuring pins
 board.set_pin_mode_digital_output(DATA_PIN)
 board.set_pin_mode_digital_output(CLOCK_PIN)
 board.set_pin_mode_digital_output(LATCH_PIN)
-board.set_pin_mode_digital_output(flashingPin)
-
 
 board.set_pin_mode_digital_input_pullup(pedestrianButton)
 
@@ -70,7 +67,7 @@ def update_3_chips(chip3_val, chip2_val, chip1_val):
     shift_out(combined, num_bits=24)
 
 def set_shift2(value):
-    update_3_chips(0x00, 0x00, value)
+    update_3_chips(0x00, value, 0x00)
 
 def tl4_cycle_state():
     set_shift2(RED_PED | GREEN_TL4 | RED_TL5)
@@ -98,18 +95,14 @@ def pedestrian_lights(BOOL):
     time.sleep(3)
     cycle_state_pedestrian(GREEN)
     time.sleep(3)
-    
-    
-        
-        
-    set_shift2( RED_TL4 | RED_TL5)
-    board.digital_pin_write(flashingPin,0)
-    time.sleep(2)
-    board.digital_pin_write(flashingPin,1)
     cycle_state_pedestrian(RED)
-            
-       
-        
+    lastTimeRed = time.time()
+    while True:
+        #flashing tbd
+        currentTimered = time.time()
+        if currentTimered-lastTimeRed>2:
+            break
+        cycle_state_pedestrian(RED)
 
 
 
@@ -118,8 +111,6 @@ def main():
     while True:
         try: 
             # 20 second green
-            board.digital_pin_write(flashingPin,1)
-            
             lastTime = time.time()
             while True:
                 currentTime =  time.time()

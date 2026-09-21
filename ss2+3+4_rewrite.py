@@ -11,25 +11,40 @@ board = pymata4.Pymata4()
 
 # Constants
 TOP_HEIGHT = 10 #cm
-pollingRate  = 0.5   # seconds
-calibrated_value_day = 150
+pollingRate  = 0.1   # seconds
+calibrated_value_day = 250
 
-DATA_PIN  = 12
-CLOCK_PIN = 13
-LATCH_PIN = 11
+DATA_PIN  = 13
+CLOCK_PIN = 11
+LATCH_PIN = 12
 
 
-# Bit layout (single 8-bit register, shared by TL6 and TL3)
-TL6_RED    = 0x80
-TL6_YELLOW = 0x40
-TL6_GREEN  = 0x20
-TL3_RED    = 0x10
-TL3_GREEN  = 0x08
+# SS3 AND 4
+RED_TL6    = 0x08
+GREEN_TL3  = 0x40
+GREEN_TL6  = 0x20
+YELLOW_TL6 = 0x10
+RED_TL3    = 0x01
 
-TL6_MASK = TL6_RED | TL6_YELLOW | TL6_GREEN
-TL3_MASK = TL3_RED | TL3_GREEN
+# SS 2
+RED_TL5    = 0x80  # Pin 8
+RED_TL4    = 0x40  # Pin 7
+YELLOW_TL5 = 0x20  # Pin 6
+YELLOW_TL4 = 0x10  # Pin 5
+GREEN_TL5  = 0x08  # Pin 4
+GREEN_TL4  = 0x04  # Pin 3
+RED_PED    = 0x02  # Pin 2
+GREEN_PED  = 0x01  # Pin 1
+
+TL6_MASK = RED_TL6 | YELLOW_TL6 | GREEN_TL6
+TL5_MASK = RED_TL5 | YELLOW_TL5 | GREEN_TL5
+TL4_MASK = RED_TL4 | YELLOW_TL4 | GREEN_TL4
+TL3_MASK = RED_TL3 | GREEN_TL3
+PED_MASK = RED_PED | GREEN_PED
 
 chip3_state = 0x00
+chip2_state = 0x00
+
 
 overheight = {
     "us1": False, "us2": False,
@@ -43,27 +58,41 @@ ldr_reading = {
 }
 
 # US5 (TL6 / ss3)
-echoPinUS5    = 3
-triggerPinUS5 = 4
+echoPinUS5    = 2
+triggerPinUS5 = 3
 us5_was_overheight = False
 us5_just_exited = False
 ss3_phase = "normal"   # normal, green, yellow
 ss3_phase_start = 0.0
 
 # US3 / US4 (TL3 / ss4)
-triggerPinUS3 = 9
-echoPinUS3    = 6
+triggerPinUS3 = 4
+echoPinUS3    = 5
 triggerPinUS4 = 8
-echoPinUS4    = 7
+echoPinUS4    = 9
 acceptableError = 10  # percent
 ss4_phase = "normal"
+# SS2
+ss2_state = "TL4_GREEN"
+ss2_state_start = 0.0
+ss2_ped_requested = False
+ss2_flash_state = False
+ss2_flash_last_toggle = 0.0
+
 
 ldrPinDS1 = 0
+pedestrianButton=2
+
+GREEN = True
+RED = False
+
 
 
 board.set_pin_mode_digital_output(DATA_PIN)
 board.set_pin_mode_digital_output(CLOCK_PIN)
 board.set_pin_mode_digital_output(LATCH_PIN)
+
+board.set_pin_mode_digital_input_pullup(pedestrianButton)
 
 
 board.set_pin_mode_sonar(triggerPinUS5, echoPinUS5, timeout=200000)
@@ -91,9 +120,14 @@ def update_3_chips(chip3_val, chip2_val, chip1_val):
     shift_out(combined, num_bits=24)
 
 def set_shift3(mask, bits_on):
-    global _chip3_state
-    _chip3_state = (_chip3_state & ~mask) | (bits_on & mask)
-    update_3_chips(0x00, 0x00, _chip3_state)
+    global chip3_state
+    chip3_state = (chip3_state & ~mask) | (bits_on & mask)
+    update_3_chips(0x00, chip3_state, chip2_state )
+
+def set_shift2(mask, bits_on):
+    global chip2_state
+    chip2_state = (chip2_state & ~mask) | (bits_on & mask)
+    update_3_chips(0x00, chip3_state, chip2_state )
 
 def heightDiff(distance):
     """
@@ -108,19 +142,104 @@ def heightDiff(distance):
     return TOP_HEIGHT - distance[0]
 
 def overheight_state_ss4():
-    set_shift3(TL3_MASK, TL3_RED)
+    set_shift3(TL3_MASK, RED_TL3)
 
 def normal_state_ss4():
-    set_shift3(TL3_MASK, TL3_GREEN)
+    set_shift3(TL3_MASK, GREEN_TL3)
 
 def normal_state_ss3():
-    set_shift3(TL6_MASK, TL6_RED)
+    set_shift3(TL6_MASK, RED_TL6)
 
 def overheight_state_ss3():
-    set_shift3(TL6_MASK, TL6_GREEN)
+    set_shift3(TL6_MASK, GREEN_TL6)
 
 def yellow_state_ss3():
-    set_shift3(TL6_MASK, TL6_YELLOW)
+    set_shift3(TL6_MASK, YELLOW_TL6)
+
+# ss2
+def tl4_cycle_state():
+    set_shift2(TL4_MASK, GREEN_TL4)
+
+def tl4_cycle_state_off():
+    set_shift2(TL4_MASK, YELLOW_TL4)
+
+def tl5_cycle_state():
+    set_shift2(TL5_MASK, GREEN_TL5)
+
+def tl5_cycle_state_off():
+    set_shift2(TL5_MASK, YELLOW_TL5)
+
+def cycle_state_pedestrian(state):
+    if state == GREEN:
+        set_shift2(PED_MASK, GREEN_PED)
+    else:
+        set_shift2(PED_MASK, RED_PED)
+#----
+def ss2_step(now):
+    global ss2_state, ss2_state_start, ss2_ped_requested
+    global ss2_flash_state, ss2_flash_last_toggle
+
+    elapsed = now - ss2_state_start
+    
+    if ss2_state in ("TL4_GREEN", "TL5_GREEN", "TL4_YELLOW", "TL5_YELLOW"):
+        if board.digital_read(pedestrianButton)[0] == 0:
+            print("button pressed")
+            ss2_ped_requested = True
+ 
+    if ss2_state == "TL4_GREEN":
+        tl4_cycle_state()
+        if ss2_ped_requested:
+            tl4_cycle_state_off()
+            ss2_ped_requested = False
+            ss2_state, ss2_state_start = "PED_YELLOW", now
+        elif elapsed > 20:
+            tl4_cycle_state_off()
+            ss2_state, ss2_state_start = "TL4_YELLOW", now
+ 
+    elif ss2_state == "TL4_YELLOW":
+        if ss2_ped_requested:
+            ss2_ped_requested = False
+            ss2_state, ss2_state_start = "PED_YELLOW", now
+        elif elapsed > 3:
+            ss2_state, ss2_state_start = "TL5_GREEN", now
+ 
+    elif ss2_state == "TL5_GREEN":
+        tl5_cycle_state()
+        if ss2_ped_requested:
+            tl5_cycle_state_off()
+            ss2_ped_requested = False
+            ss2_state, ss2_state_start = "PED_YELLOW", now
+        elif elapsed > 10:
+            tl5_cycle_state_off()
+            ss2_state, ss2_state_start = "TL5_YELLOW", now
+ 
+    elif ss2_state == "TL5_YELLOW":
+        if ss2_ped_requested:
+            ss2_ped_requested = False
+            ss2_state, ss2_state_start = "PED_YELLOW", now
+        elif elapsed > 3:
+            ss2_state, ss2_state_start = "TL4_GREEN", now
+ 
+    elif ss2_state == "PED_YELLOW":
+        if elapsed > 3:
+            cycle_state_pedestrian(GREEN)
+            ss2_state, ss2_state_start = "PED_GREEN", now
+ 
+    elif ss2_state == "PED_GREEN":
+        if elapsed > 3:
+            set_shift2(TL4_MASK | TL5_MASK |PED_MASK , RED_TL4 | RED_TL5)  # traffic lights solid red
+            ss2_flash_state = False
+            ss2_flash_last_toggle = now
+            ss2_state, ss2_state_start = "PED_FLASH", now
+
+    elif ss2_state == "PED_FLASH":
+        if elapsed >= 2:
+            cycle_state_pedestrian(RED)  # flash done, settle to solid red
+            ss2_state, ss2_state_start = "TL4_GREEN", now
+        elif now - ss2_flash_last_toggle >= 0.125:
+            ss2_flash_state = not ss2_flash_state
+            set_shift2(PED_MASK, RED_PED if ss2_flash_state else 0)
+            ss2_flash_last_toggle = now
 
 def ss3_step(now, is_overheight,is_day):
     global ss3_phase, ss3_phase_start
@@ -137,8 +256,11 @@ def ss3_step(now, is_overheight,is_day):
 
     elif ss3_phase == "green":
         if now - ss3_phase_start >= green_time: #time green
-            yellow_state_ss3()
-            ss3_phase, ss3_phase_start = "yellow", now
+            if is_overheight:
+               pass
+            else:
+                yellow_state_ss3()
+                ss3_phase, ss3_phase_start = "yellow", now
 
     elif ss3_phase == "yellow": # time yellow
         if now - ss3_phase_start >= 3:
@@ -157,6 +279,7 @@ def ss4_step (is_overheight, us5_just_exited):
             ss4_phase = "normal"
 
 def main():
+    global us5_was_overheight
     while True:
         try: 
             #Validation loop
@@ -197,7 +320,7 @@ def main():
                     heightUS4 = heightDiff(board.sonar_read(triggerPinUS4)) # height of veh from us4 - ss4
                     heightUS5 = heightDiff(board.sonar_read(triggerPinUS5)) # height of veh from us5 - ss3
 
-                    valueDS1 = board.analog_read(ldrPinDS1)
+                    valueDS1 = board.analog_read(ldrPinDS1)[0]
                     
                     
                     lowerErrorBound = heightUS3*(1- acceptableError/100)
@@ -220,6 +343,8 @@ def main():
                     ss4_step(is_over_ss4,us5_just_exited)
                     #ss3 logic
                     ss3_step(currentTime,overheight["us5"],ldr_reading["ldr_DS1"])
+                    #ss2
+                    ss2_step(currentTime)
 
         except KeyboardInterrupt:
             update_3_chips(0x00, 0x00, 0x00)

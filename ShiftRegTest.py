@@ -1,9 +1,13 @@
 from pymata4 import pymata4
 import time
 
-DATA_PIN  = 12
-CLOCK_PIN = 13
-LATCH_PIN = 11
+DATA_PIN  = 13
+CLOCK_PIN = 11
+LATCH_PIN = 12
+
+# DATA_PIN  = 10
+# CLOCK_PIN = 6
+# LATCH_PIN = 7
 
 board = pymata4.Pymata4()
 
@@ -50,6 +54,43 @@ def main():
     while True:
         try: 
             # shift_out(0xFF)
+        
+            update_3_chips(0x00,0x00, 0x80)
+            print("0x80")
+            time.sleep(3)
+            update_3_chips(0x00,0x00, 0x40)
+            print("0x40")
+
+            time.sleep(3)
+            update_3_chips(0x00,0x00, 0x20)
+            print("0x20")
+
+            time.sleep(3)
+            update_3_chips(0x00,0x00, 0x10)
+            print("0x10")
+
+            time.sleep(3)
+            update_3_chips(0x00,0x00, 0x08)
+            print("0x08")
+
+            time.sleep(3)
+            update_3_chips(0x00,0x00, 0x04)
+            print("0x04")
+
+            time.sleep(3)
+            update_3_chips(0x00,0x00, 0x02)
+            print("0x02")
+
+            time.sleep(3)
+            update_3_chips(0x00,0x00, 0x01)
+            print("0x01")
+
+
+            time.sleep(3)
+            
+            
+
+
             test_all_leds()
             time.sleep(3)
         except KeyboardInterrupt:
