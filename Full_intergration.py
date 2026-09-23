@@ -93,6 +93,10 @@ ss2_state_start = 0.0
 ss2_ped_requested = False
 ss2_flash_state = False
 ss2_flash_last_toggle = 0.0
+ss3_hold_active = False
+ss3_hold_start = 0.0
+ss2_hold_requested = False
+
 
 # US1 & TL1
 echoPinUS1    = 3
@@ -193,7 +197,6 @@ def overheight_state_ss3():
 def yellow_state_ss3():
     set_shift3(TL6_MASK, YELLOW_TL6)
 
-# ss2
 def tl4_cycle_state():
     set_shift2(TL4_MASK, GREEN_TL4)
 
@@ -208,10 +211,10 @@ def tl5_cycle_state_off():
 
 def cycle_state_pedestrian(state):
     if state == GREEN:
-        set_shift2(PED_MASK, GREEN_PED)
+        set_shift2(PED_MASK | TL4_MASK | TL5_MASK, GREEN_PED | RED_TL4 | RED_TL5)
     else:
         set_shift2(PED_MASK, RED_PED)
-#----
+
 def normal_state_ss1_TL1():
     set_shift1(TL1_MASK,GREEN_TL1)
 
@@ -237,13 +240,17 @@ def exit_override():
     # PA1/WL1 bits are in mask but not in bits_on -> cleared
     set_shift1(TL1_MASK | TL2_MASK | PA1_MASK | WL1_MASK, GREEN_TL1 | GREEN_TL2)
 
-
-def ss1_step(now, is_overheight_US1, is_overheight_US2):
+def ss1_step(now):
     global ss1_TL1_phase, ss1_TL1_phase_start, ss1_TL2_phase, ss1_TL2_phase_start
     global ss1_was_overridden
 
     override = overheight["us3"] and overheight["us4"]
-
+    is_overheight_US1 = overheight["us1"]
+    is_overheight_US2 = overheight["us2"]
+    
+    if is_overheight_US1:
+        print(board.sonar_read(triggerPinUS1))
+    
     if override:
         if not ss1_was_overridden:
             enter_override()
@@ -297,10 +304,11 @@ def ss1_step(now, is_overheight_US1, is_overheight_US2):
             normal_state_ss1_TL2()
             ss1_TL2_phase = "green"
 
-def ss2_step(now,is_day):
+def ss2_step(now):
     global ss2_state, ss2_state_start, ss2_ped_requested
     global ss2_flash_state, ss2_flash_last_toggle
 
+    is_day = ldr_reading["ldr_DS2"]
     elapsed = now - ss2_state_start
     tl4_green_time = 20 if is_day else 30
     tl5_green_time = 10 if is_day else 5
@@ -316,6 +324,9 @@ def ss2_step(now,is_day):
             tl4_cycle_state_off()
             ss2_ped_requested = False
             ss2_state, ss2_state_start = "PED_YELLOW", now
+        elif ss2_hold_requested:
+            tl4_cycle_state_off()
+            ss2_state, ss2_state_start = "TL4_YELLOW", now
         elif elapsed > tl4_green_time:
             tl4_cycle_state_off()
             ss2_state, ss2_state_start = "TL4_YELLOW", now
@@ -325,7 +336,11 @@ def ss2_step(now,is_day):
             ss2_ped_requested = False
             ss2_state, ss2_state_start = "PED_YELLOW", now
         elif elapsed > 3:
-            ss2_state, ss2_state_start = "TL5_GREEN", now
+            if ss2_hold_requested:
+                cycle_state_pedestrian(GREEN)
+                ss2_state, ss2_state_start = "TL_HOLD", now
+            else:
+                ss2_state, ss2_state_start = "TL5_GREEN", now
  
     elif ss2_state == "TL5_GREEN":
         tl5_cycle_state()
@@ -333,16 +348,23 @@ def ss2_step(now,is_day):
             tl5_cycle_state_off()
             ss2_ped_requested = False
             ss2_state, ss2_state_start = "PED_YELLOW", now
+        elif ss2_hold_requested:
+            tl5_cycle_state_off()
+            ss2_state, ss2_state_start = "TL5_YELLOW", now
         elif elapsed > tl5_green_time:
             tl5_cycle_state_off()
             ss2_state, ss2_state_start = "TL5_YELLOW", now
- 
+
     elif ss2_state == "TL5_YELLOW":
         if ss2_ped_requested:
             ss2_ped_requested = False
             ss2_state, ss2_state_start = "PED_YELLOW", now
         elif elapsed > 3:
-            ss2_state, ss2_state_start = "TL4_GREEN", now
+            if ss2_hold_requested:
+                cycle_state_pedestrian(GREEN)
+                ss2_state, ss2_state_start = "TL_HOLD", now
+            else:
+                ss2_state, ss2_state_start = "TL4_GREEN", now
  
     elif ss2_state == "PED_YELLOW":
         if elapsed > 3:
@@ -358,22 +380,43 @@ def ss2_step(now,is_day):
 
     elif ss2_state == "PED_FLASH":
         if elapsed >= 2:
-            cycle_state_pedestrian(RED)  # flash done, settle to solid red
-            ss2_state, ss2_state_start = "TL4_GREEN", now
+            cycle_state_pedestrian(RED)
+            if ss2_hold_requested:
+                cycle_state_pedestrian(GREEN)
+                ss2_state, ss2_state_start = "TL_HOLD", now
+            else:
+                ss2_state, ss2_state_start = "TL4_GREEN", now
         elif now - ss2_flash_last_toggle >= 0.125:
             ss2_flash_state = not ss2_flash_state
             set_shift2(PED_MASK, RED_PED if ss2_flash_state else 0)
             ss2_flash_last_toggle = now
 
-def ss3_step(now, is_overheight,is_day):
-    global ss3_phase, ss3_phase_start
-    
+    elif ss2_state == "TL_HOLD":
+        if not ss2_hold_requested:
+            ss2_flash_state = False
+            ss2_flash_last_toggle = now
+            ss2_state, ss2_state_start = "PED_FLASH", now
+
+def ss3_step(now):
+    global ss3_phase, ss3_phase_start, ss3_hold_active, ss3_hold_start, ss2_hold_requested
+    is_overheight,is_day = overheight["us5"],ldr_reading["ldr_DS1"]
     green_time = 5 if is_day else 10
 
     if ss3_phase == "normal":
         if is_overheight:
-            overheight_state_ss3()
-            ss3_phase, ss3_phase_start = "green", now
+            if not ss3_hold_active:
+                ss3_hold_active = True
+                ss3_hold_start = now
+                ss2_hold_requested = True
+
+            if (now - ss3_hold_start >= 3) and ss2_state == "TL_HOLD":
+                overheight_state_ss3()
+                ss3_phase, ss3_phase_start = "green", now
+                ss3_hold_active = False
+        elif ss3_hold_active:
+            # overheight cleared before the hold finished — cancel it
+            ss3_hold_active = False
+            ss2_hold_requested = False
 
     elif ss3_phase == "green":
         if now - ss3_phase_start >= green_time: #time green
@@ -387,9 +430,11 @@ def ss3_step(now, is_overheight,is_day):
         if now - ss3_phase_start >= 3:
             normal_state_ss3()
             ss3_phase = "normal"
+            ss2_hold_requested = False
 
-def ss4_step (is_overheight, us5_just_exited):
+def ss4_step(is_overheight, us5_just_exited):
     global ss4_phase
+     
     if ss4_phase == "normal":
         if is_overheight:
             overheight_state_ss4()
@@ -463,14 +508,12 @@ def main():
                     # execution & logic
                     is_over_ss4 = overheight["us3"] and lowerErrorBound <= heightUS4 <= upperErrorBound
 
-                    #ss4 logic
-                    ss4_step(is_over_ss4,us5_just_exited)
-                    #ss3 logic
-                    ss3_step(currentTime,overheight["us5"],ldr_reading["ldr_DS1"])
-                    #ss2
-                    ss2_step(currentTime,ldr_reading["ldr_DS2"])
-                    #ss1
-                    ss1_step(currentTime,overheight["us1"],overheight["us2"])
+                    
+                    
+                    ss1_step(currentTime)
+                    ss2_step(currentTime)
+                    ss3_step(currentTime)
+                    ss4_step(is_over_ss4, us5_just_exited)
                     
         except KeyboardInterrupt:
             update_3_chips(0x00, 0x00, 0x00)
