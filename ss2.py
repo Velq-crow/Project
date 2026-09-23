@@ -15,19 +15,6 @@ pollingTime = 0.2
 DATA_PIN  = 13
 CLOCK_PIN = 11
 LATCH_PIN = 12
-"""
-Shift 1 
-Pin 1: Red ped
-Pin 2: Green traffic right side
-Pin 3: Green traffic left side
-Pin 4: Yello right
-Pin 5: Yello left
-Pin 6: red right
-Pin 7: red left
-Pin 8: green ped
-tl4 is right side
-tl5 is left side
-"""
 
 RED_TL5    = 0x80  # Pin 8
 RED_TL4    = 0x40  # Pin 7

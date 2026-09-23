@@ -38,61 +38,34 @@ def test_all_leds():
         chip1_val = value & 0xFF
         chip2_val = (value >> 8) & 0xFF
         chip3_val = (value >> 16) & 0xFF
+ 
+        if chip1_val:
+            chip_num, led_hex = 1, chip1_val
+        elif chip2_val:
+            chip_num, led_hex = 2, chip2_val
+        else:
+            chip_num, led_hex = 3, chip3_val
+ 
+        print(f"Chip {chip_num}: 0x{led_hex:02X}")
+ 
         update_3_chips(chip3_val, chip2_val, chip1_val)
         time.sleep(0.2)
         update_3_chips(0x00, 0x00, 0x00)  # off before next LED
         time.sleep(0.1)
-
+ 
     # All LEDs on
     update_3_chips(0xFF, 0xFF, 0xFF)
     time.sleep(1)
-
+ 
     # All LEDs off
     update_3_chips(0x00, 0x00, 0x00)
 
 def main():
     while True:
-        try: 
-            # shift_out(0xFF)
-        
-            update_3_chips(0x00,0x00, 0x80)
-            print("0x80")
-            time.sleep(3)
-            update_3_chips(0x00,0x00, 0x40)
-            print("0x40")
-
-            time.sleep(3)
-            update_3_chips(0x00,0x00, 0x20)
-            print("0x20")
-
-            time.sleep(3)
-            update_3_chips(0x00,0x00, 0x10)
-            print("0x10")
-
-            time.sleep(3)
-            update_3_chips(0x00,0x00, 0x08)
-            print("0x08")
-
-            time.sleep(3)
-            update_3_chips(0x00,0x00, 0x04)
-            print("0x04")
-
-            time.sleep(3)
-            update_3_chips(0x00,0x00, 0x02)
-            print("0x02")
-
-            time.sleep(3)
-            update_3_chips(0x00,0x00, 0x01)
-            print("0x01")
-
-
-            time.sleep(3)
-            
-            
-
+        try:
 
             test_all_leds()
-            time.sleep(3)
+            
         except KeyboardInterrupt:
             update_3_chips(0x00, 0x00, 0x00)
             print("\nExiting program")

@@ -12,6 +12,7 @@ board = pymata4.Pymata4()
 # Constants
 TOP_HEIGHT = 10 #cm
 pollingRate  = 0.1   # seconds
+overHeightLimit = 4
 calibrated_value_day = 250
 
 DATA_PIN  = 13
@@ -19,14 +20,14 @@ CLOCK_PIN = 11
 LATCH_PIN = 12
 
 
-# SS3 AND 4
+#SS3 AND 4
 RED_TL6    = 0x08
 GREEN_TL3  = 0x40
 GREEN_TL6  = 0x20
 YELLOW_TL6 = 0x10
 RED_TL3    = 0x01
 
-# SS 2
+#SS 2
 RED_TL5    = 0x80  # Pin 8
 RED_TL4    = 0x40  # Pin 7
 YELLOW_TL5 = 0x20  # Pin 6
@@ -36,14 +37,29 @@ GREEN_TL4  = 0x04  # Pin 3
 RED_PED    = 0x02  # Pin 2
 GREEN_PED  = 0x01  # Pin 1
 
+#SS 1
+BUZZER_PA1 = 0x80  # Pin 1
+GREEN_TL1  = 0x40  # Pin 2
+GREEN_TL2  = 0x20  # Pin 3
+YELLOW_TL1 = 0x10  # Pin 4
+YELLOW_TL2 = 0x08  # Pin 5
+RED_TL1    = 0x04  # Pin 6
+RED_TL2    = 0x02  # Pin 7
+LIGHTS_WL1 = 0x01  # Pin 8
+
 TL6_MASK = RED_TL6 | YELLOW_TL6 | GREEN_TL6
 TL5_MASK = RED_TL5 | YELLOW_TL5 | GREEN_TL5
 TL4_MASK = RED_TL4 | YELLOW_TL4 | GREEN_TL4
 TL3_MASK = RED_TL3 | GREEN_TL3
+TL2_MASK = GREEN_TL2 | YELLOW_TL2 | RED_TL2
+TL1_MASK = GREEN_TL1 | YELLOW_TL1 | RED_TL1
 PED_MASK = RED_PED | GREEN_PED
+PA1_MASK = BUZZER_PA1
+WL1_MASK = LIGHTS_WL1
 
 chip3_state = 0x00
 chip2_state = 0x00
+chip1_state = 0x00
 
 
 overheight = {
@@ -79,6 +95,17 @@ ss2_ped_requested = False
 ss2_flash_state = False
 ss2_flash_last_toggle = 0.0
 
+# US1 & TL1
+echoPinUS1    = 3
+triggerPinUS1 = 4
+ss1_TL1_phase = "green"   # red, green, yellow
+ss1_TL1_phase_start = 0.0
+
+# US2
+echoPinUS2    = 3
+triggerPinUS2 = 4
+ss1_TL2_phase = "green"   # red, green, yellow
+ss1_TL2_phase_start = 0.0
 
 ldrPinDS1 = 0
 ldrPinDS2 = 1
@@ -99,6 +126,8 @@ board.set_pin_mode_digital_input_pullup(pedestrianButton)
 board.set_pin_mode_sonar(triggerPinUS5, echoPinUS5, timeout=200000)
 board.set_pin_mode_sonar(triggerPinUS3, echoPinUS3, timeout=200000)
 board.set_pin_mode_sonar(triggerPinUS4, echoPinUS4, timeout=200000)
+board.set_pin_mode_sonar(triggerPinUS1, echoPinUS1, timeout=200000)
+board.set_pin_mode_sonar(triggerPinUS2, echoPinUS2, timeout=200000)
 board.set_pin_mode_analog_input(ldrPinDS1)
 board.set_pin_mode_analog_input(ldrPinDS2)
 
@@ -125,12 +154,17 @@ def update_3_chips(chip3_val, chip2_val, chip1_val):
 def set_shift3(mask, bits_on):
     global chip3_state
     chip3_state = (chip3_state & ~mask) | (bits_on & mask)
-    update_3_chips(0x00, chip3_state, chip2_state )
+    update_3_chips(chip1_state, chip3_state, chip2_state )
 
 def set_shift2(mask, bits_on):
     global chip2_state
     chip2_state = (chip2_state & ~mask) | (bits_on & mask)
-    update_3_chips(0x00, chip3_state, chip2_state )
+    update_3_chips(chip1_state, chip3_state, chip2_state )
+
+def set_shift1(mask, bits_on):
+    global chip1_state
+    chip1_state = (chip1_state & ~mask) | (bits_on & mask)
+    update_3_chips(chip1_state, chip3_state, chip2_state)
 
 def heightDiff(distance):
     """
@@ -178,6 +212,91 @@ def cycle_state_pedestrian(state):
     else:
         set_shift2(PED_MASK, RED_PED)
 #----
+def normal_state_ss1_TL1():
+    set_shift1(TL1_MASK,GREEN_TL1)
+
+def normal_state_ss1_TL2():
+    set_shift1(TL2_MASK,GREEN_TL2)
+
+def yellow_state_ss1_TL1():
+    set_shift1(TL1_MASK,YELLOW_TL1)
+
+def yellow_state_ss1_TL2():
+    set_shift1(TL2_MASK,YELLOW_TL2)
+
+def overheight_state_ss1_TL1():
+    set_shift1(TL1_MASK,RED_TL1)
+
+def overheight_state_ss1_TL2():
+    set_shift1(TL2_MASK,RED_TL2)
+
+def enter_override():
+    set_shift1(TL1_MASK | TL2_MASK | PA1_MASK | WL1_MASK, RED_TL1 | RED_TL2 | BUZZER_PA1 | LIGHTS_WL1)
+
+def exit_override():
+    # PA1/WL1 bits are in mask but not in bits_on -> cleared
+    set_shift1(TL1_MASK | TL2_MASK | PA1_MASK | WL1_MASK, GREEN_TL1 | GREEN_TL2)
+
+
+def ss1_step(now, is_overheight_US1, is_overheight_US2):
+    global ss1_TL1_phase, ss1_TL1_phase_start, ss1_TL2_phase, ss1_TL2_phase_start
+    global ss1_was_overridden
+
+    override = overheight["us3"] and overheight["us4"]
+
+    if override:
+        if not ss1_was_overridden:
+            enter_override()
+            ss1_TL1_phase, ss1_TL1_phase_start = "red", now
+            ss1_TL2_phase, ss1_TL2_phase_start = "red", now
+            ss1_was_overridden = True
+        return
+
+    if ss1_was_overridden:
+        exit_override()
+        ss1_TL1_phase, ss1_TL1_phase_start = "green", now
+        ss1_TL2_phase, ss1_TL2_phase_start = "green", now
+        ss1_was_overridden = False
+
+    # --- 1.R2: TL1 driven by US1 ---
+    if ss1_TL1_phase == "green":
+        if is_overheight_US1:
+            yellow_state_ss1_TL1()
+            ss1_TL1_phase, ss1_TL1_phase_start = "yellow", now
+
+    elif ss1_TL1_phase == "yellow":
+        if now - ss1_TL1_phase_start >= 1:
+            overheight_state_ss1_TL1()
+            ss1_TL1_phase, ss1_TL1_phase_start = "red", now
+
+    elif ss1_TL1_phase == "red":
+        if now - ss1_TL1_phase_start >= 30:
+            normal_state_ss1_TL1()
+            ss1_TL1_phase = "green"
+
+    if ss1_TL2_phase == "green":
+        if is_overheight_US2 and ss1_TL1_phase == "green":
+
+            yellow_state_ss1_TL1()
+            ss1_TL1_phase, ss1_TL1_phase_start = "yellow", now
+
+            yellow_state_ss1_TL2()
+            ss1_TL2_phase, ss1_TL2_phase_start = "yellow", now
+
+        elif is_overheight_US2 and ss1_TL1_phase != "green":
+            yellow_state_ss1_TL2()
+            ss1_TL2_phase, ss1_TL2_phase_start = "yellow", now
+
+    elif ss1_TL2_phase == "yellow":
+        if now - ss1_TL2_phase_start >= 1:
+            overheight_state_ss1_TL2()
+            ss1_TL2_phase, ss1_TL2_phase_start = "red", now
+
+    elif ss1_TL2_phase == "red":
+        if now - ss1_TL2_phase_start >= 30:
+            normal_state_ss1_TL2()
+            ss1_TL2_phase = "green"
+
 def ss2_step(now,is_day):
     global ss2_state, ss2_state_start, ss2_ped_requested
     global ss2_flash_state, ss2_flash_last_toggle
@@ -316,16 +435,20 @@ def main():
 
 
                     # reads & calcuations
-                    heightUS3 = heightDiff(board.sonar_read(triggerPinUS3)) # height of veh from us3 - ss4
-                    heightUS4 = heightDiff(board.sonar_read(triggerPinUS4)) # height of veh from us4 - ss4
-                    heightUS5 = heightDiff(board.sonar_read(triggerPinUS5)) # height of veh from us5 - ss3
-
+                    heightUS1 = heightDiff(board.sonar_read(triggerPinUS1))
+                    heightUS2 = heightDiff(board.sonar_read(triggerPinUS2))
+                    heightUS3 = heightDiff(board.sonar_read(triggerPinUS3))
+                    heightUS4 = heightDiff(board.sonar_read(triggerPinUS4))
+                    heightUS5 = heightDiff(board.sonar_read(triggerPinUS5))
                     valueDS1 = board.analog_read(ldrPinDS1)[0]
                     valueDS2 = board.analog_read(ldrPinDS2)[0]
                     
                     lowerErrorBound = heightUS3*(1- acceptableError/100)
                     upperErrorBound = heightUS3*(1+ acceptableError/100)
 
+
+                    overheight["us1"] = heightUS1 >= overHeightLimit
+                    overheight["us2"] = heightUS2 >= overHeightLimit
                     overheight["us3"] = heightUS3 >= overHeightLimit
                     overheight["us4"] = heightUS4 >= overHeightLimit
                     overheight["us5"] = heightUS5 >= overHeightLimit
@@ -346,7 +469,9 @@ def main():
                     ss3_step(currentTime,overheight["us5"],ldr_reading["ldr_DS1"])
                     #ss2
                     ss2_step(currentTime,ldr_reading["ldr_DS2"])
-
+                    #ss1
+                    ss1_step(currentTime,overheight["us1"],overheight["us2"])
+                    
         except KeyboardInterrupt:
             update_3_chips(0x00, 0x00, 0x00)
             print("\nExiting program")
