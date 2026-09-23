@@ -247,7 +247,7 @@ def ss1_step(now):
     override = overheight["us3"] and overheight["us4"]
     is_overheight_US1 = overheight["us1"]
     is_overheight_US2 = overheight["us2"]
-    
+
     if is_overheight_US1:
         print(board.sonar_read(triggerPinUS1))
     
@@ -393,6 +393,7 @@ def ss2_step(now):
 
     elif ss2_state == "TL_HOLD":
         if not ss2_hold_requested:
+            set_shift2(PED_MASK,0)
             ss2_flash_state = False
             ss2_flash_last_toggle = now
             ss2_state, ss2_state_start = "PED_FLASH", now
