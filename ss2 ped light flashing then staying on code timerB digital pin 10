@@ -1,0 +1,51 @@
+from pymata4 import pymata4
+import time
+
+board = pymata4.Pymata4()
+
+LED_ENABLE = 5
+TIMER_B_RESET = 10
+
+board.set_pin_mode_digital_output(LED_ENABLE)
+board.set_pin_mode_digital_output(TIMER_B_RESET)
+
+try:
+    while True:
+
+        # =====================
+        # OFF
+        # =====================
+        board.digital_write(LED_ENABLE, 0)
+        board.digital_write(TIMER_B_RESET, 0)
+
+        print("LED OFF")
+        time.sleep(5)
+
+
+        # =====================
+        # FLASHING
+        # =====================
+        board.digital_write(LED_ENABLE, 1)
+        board.digital_write(TIMER_B_RESET, 1)
+
+        print("LED FLASHING")
+        time.sleep(5)
+
+
+        # =====================
+        # SOLID ON
+        # =====================
+        board.digital_write(LED_ENABLE, 1)
+        board.digital_write(TIMER_B_RESET, 0)
+
+        print("LED SOLID")
+        time.sleep(5)
+
+
+except KeyboardInterrupt:
+
+    # Turn LED off when program stops
+    board.digital_write(LED_ENABLE, 0)
+    board.digital_write(TIMER_B_RESET, 0)
+
+    board.shutdown()
