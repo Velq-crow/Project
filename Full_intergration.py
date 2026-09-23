@@ -12,7 +12,6 @@ board = pymata4.Pymata4()
 # Constants
 TOP_HEIGHT = 10 #cm
 pollingRate  = 0.1   # seconds
-overHeightLimit = 4
 calibrated_value_day = 250
 
 DATA_PIN  = 13
@@ -106,6 +105,7 @@ echoPinUS2    = 3
 triggerPinUS2 = 4
 ss1_TL2_phase = "green"   # red, green, yellow
 ss1_TL2_phase_start = 0.0
+ss1_was_overridden = False
 
 ldrPinDS1 = 0
 ldrPinDS2 = 1
@@ -408,7 +408,7 @@ def main():
             while overHeightLimit is None or overHeightLimit < 0 or overHeightLimit > TOP_HEIGHT:
                 limitInput = input("Enter the height limit (m): ").strip()
                 try:
-                    if overHeightLimit == "":
+                    if limitInput == "":
                         print("Assigning default height")
                         overHeightLimit = 4
                         break
