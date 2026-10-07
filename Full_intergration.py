@@ -11,7 +11,7 @@ board = pymata4.Pymata4()
 
 # Constants
 TOP_HEIGHT = 10 #cm
-pollingRate  = 0.1   # seconds
+pollingRate  = 0.5   # seconds
 calibrated_value_day = 250
 
 DATA_PIN  = 13
@@ -35,6 +35,7 @@ GREEN_TL5  = 0x08  # Pin 4
 GREEN_TL4  = 0x04  # Pin 3
 RED_PED    = 0x02  # Pin 2
 GREEN_PED  = 0x01  # Pin 1
+redPedFlashing = 7
 
 #SS 1
 BUZZER_PA1 = 0x80  # Pin 1
@@ -91,8 +92,6 @@ ss4_phase = "normal"
 ss2_state = "TL4_GREEN"
 ss2_state_start = 0.0
 ss2_ped_requested = False
-ss2_flash_state = False
-ss2_flash_last_toggle = 0.0
 ss3_hold_active = False
 ss3_hold_start = 0.0
 ss2_hold_requested = False
@@ -123,6 +122,9 @@ RED = False
 board.set_pin_mode_digital_output(DATA_PIN)
 board.set_pin_mode_digital_output(CLOCK_PIN)
 board.set_pin_mode_digital_output(LATCH_PIN)
+
+board.set_pin_mode_digital_output(redPedFlashing)
+board.digital_write(redPedFlashing, 0)
 
 board.set_pin_mode_digital_input_pullup(pedestrianButton)
 
@@ -306,7 +308,6 @@ def ss1_step(now):
 
 def ss2_step(now):
     global ss2_state, ss2_state_start, ss2_ped_requested
-    global ss2_flash_state, ss2_flash_last_toggle
 
     is_day = ldr_reading["ldr_DS2"]
     elapsed = now - ss2_state_start
@@ -374,28 +375,24 @@ def ss2_step(now):
     elif ss2_state == "PED_GREEN":
         if elapsed > 3:
             set_shift2(TL4_MASK | TL5_MASK |PED_MASK , RED_TL4 | RED_TL5)  # traffic lights solid red
-            ss2_flash_state = False
-            ss2_flash_last_toggle = now
             ss2_state, ss2_state_start = "PED_FLASH", now
 
     elif ss2_state == "PED_FLASH":
         if elapsed >= 2:
             cycle_state_pedestrian(RED)
+            board.digital_write(redPedFlashing,0)
             if ss2_hold_requested:
                 cycle_state_pedestrian(GREEN)
                 ss2_state, ss2_state_start = "TL_HOLD", now
             else:
                 ss2_state, ss2_state_start = "TL4_GREEN", now
-        elif now - ss2_flash_last_toggle >= 0.125:
-            ss2_flash_state = not ss2_flash_state
-            set_shift2(PED_MASK, RED_PED if ss2_flash_state else 0)
-            ss2_flash_last_toggle = now
+        else:
+            set_shift2(PED_MASK, 0)
+            board.digital_write(redPedFlashing,1)
 
     elif ss2_state == "TL_HOLD":
         if not ss2_hold_requested:
             set_shift2(PED_MASK,0)
-            ss2_flash_state = False
-            ss2_flash_last_toggle = now
             ss2_state, ss2_state_start = "PED_FLASH", now
 
 def ss3_step(now):
@@ -472,7 +469,6 @@ def main():
                     print("Invalid input. Please enter a whole number.")
 
 
-
             lastPollTime = time.time()
             while True:
                 currentTime = time.time()
@@ -518,6 +514,8 @@ def main():
                     
         except KeyboardInterrupt:
             update_3_chips(0x00, 0x00, 0x00)
+            board.digital_write(redPedFlashing,0)
+
             print("\nExiting program")
             time.sleep(1)
             break

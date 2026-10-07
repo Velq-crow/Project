@@ -117,7 +117,6 @@ def main():
                         break
 
                     overHeightLimit = int(limitInput)
-
                     if overHeightLimit < 0:
                         print("Invalid input. height limit cannot be negative.")
                         overHeightLimit = None

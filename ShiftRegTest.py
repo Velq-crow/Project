@@ -15,6 +15,10 @@ board.set_pin_mode_digital_output(DATA_PIN)
 board.set_pin_mode_digital_output(CLOCK_PIN)
 board.set_pin_mode_digital_output(LATCH_PIN)
 
+board.set_pin_mode_digital_output(8)
+board.set_pin_mode_digital_output(7)
+
+
 time.sleep(1)
 
 def shift_out(value, num_bits=8, msb_first=True):
@@ -49,9 +53,9 @@ def test_all_leds():
         print(f"Chip {chip_num}: 0x{led_hex:02X}")
  
         update_3_chips(chip3_val, chip2_val, chip1_val)
-        time.sleep(0.2)
+        time.sleep(1.5)
         update_3_chips(0x00, 0x00, 0x00)  # off before next LED
-        time.sleep(0.1)
+        time.sleep(0.5)
  
     # All LEDs on
     update_3_chips(0xFF, 0xFF, 0xFF)
@@ -63,8 +67,34 @@ def test_all_leds():
 def main():
     while True:
         try:
+            
+            
+            # test_all_leds()
+            # time.sleep(3)  
+            print("shift")
+            update_3_chips(0xFF, 0xFF, 0xFF)
+            board.digital_write(7, 0)
+            time.sleep(3)
 
-            test_all_leds()
+
+            print("7")
+            update_3_chips(0x00, 0x00, 0x00)
+            board.digital_write(7,1 )            
+            time.sleep(3)  
+
+            print("shift&7")
+            update_3_chips(0xFF, 0xFF, 0xFF)
+            board.digital_write(7, 1)            
+            time.sleep(3)
+
+            print("none")
+            update_3_chips(0x00, 0x00, 0x00)
+            board.digital_write(7, 0)            
+            time.sleep(3)         
+            
+            board.digital_write(8, 1)
+            board.digital_write(7, 1)
+            # update_3_chips(0xFF, 0xFF, 0xFF)
             
         except KeyboardInterrupt:
             update_3_chips(0x00, 0x00, 0x00)
