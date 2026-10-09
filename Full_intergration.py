@@ -11,41 +11,41 @@ board = pymata4.Pymata4()
 
 # Constants
 TOP_HEIGHT = 10 #cm
-pollingRate  = 0.5   # seconds
-calibrated_value_day = 250
+pollingRate  = 1  # seconds
+calibrated_value_day = 1
 
-DATA_PIN  = 13
-CLOCK_PIN = 11
-LATCH_PIN = 12
+DATA_PIN  = 14 #13
+CLOCK_PIN = 16
+LATCH_PIN = 15 #12
 
 
 #SS3 AND 4
-RED_TL6    = 0x08
-GREEN_TL3  = 0x40
-GREEN_TL6  = 0x20
+RED_TL6    = 0x20
+GREEN_TL6  = 0x08
 YELLOW_TL6 = 0x10
-RED_TL3    = 0x01
+GREEN_TL3  = 0x40
+RED_TL3    = 0x80
 
 #SS 2
-RED_TL5    = 0x80  # Pin 8
-RED_TL4    = 0x40  # Pin 7
-YELLOW_TL5 = 0x20  # Pin 6
-YELLOW_TL4 = 0x10  # Pin 5
-GREEN_TL5  = 0x08  # Pin 4
-GREEN_TL4  = 0x04  # Pin 3
+RED_TL5    = 0x40  # Pin 8
+RED_TL4    = 0x80  # Pin 7
+YELLOW_TL5 = 0x08  # Pin 6
+YELLOW_TL4 = 0x01  # Pin 5
+GREEN_TL5  = 0x04  # Pin 4
+GREEN_TL4  = 0x20  # Pin 3
 RED_PED    = 0x02  # Pin 2
-GREEN_PED  = 0x01  # Pin 1
-redPedFlashing = 7
+GREEN_PED  = 0x10  # Pin 1
+redPedFlashing = 8
 
 #SS 1
-BUZZER_PA1 = 0x80  # Pin 1
-GREEN_TL1  = 0x40  # Pin 2
-GREEN_TL2  = 0x20  # Pin 3
+GREEN_TL2  = 0x40  # Pin 3
+GREEN_TL1  = 0x20  # Pin 2
+YELLOW_TL2 = 0x80  # Pin 5
 YELLOW_TL1 = 0x10  # Pin 4
-YELLOW_TL2 = 0x08  # Pin 5
+RED_TL2    = 0x08  # Pin 7
 RED_TL1    = 0x04  # Pin 6
-RED_TL2    = 0x02  # Pin 7
-LIGHTS_WL1 = 0x01  # Pin 8
+LIGHTS_WL1 = 0x02  # Pin 8
+BUZZER_PA1 = 0x01  # Pin 1
 
 TL6_MASK = RED_TL6 | YELLOW_TL6 | GREEN_TL6
 TL5_MASK = RED_TL5 | YELLOW_TL5 | GREEN_TL5
@@ -74,49 +74,52 @@ ldr_reading = {
 }
 
 # US5 (TL6 / ss3)
-echoPinUS5    = 2
-triggerPinUS5 = 3
+echoPinUS5    = 5
+triggerPinUS5 = 13
 us5_was_overheight = False
 us5_just_exited = False
 ss3_phase = "normal"   # normal, green, yellow
 ss3_phase_start = 0.0
 
 # US3 / US4 (TL3 / ss4)
-triggerPinUS3 = 4
-echoPinUS3    = 5
-triggerPinUS4 = 8
-echoPinUS4    = 9
+triggerPinUS3 = 11
+echoPinUS3    = 6
+triggerPinUS4 = 12
+echoPinUS4    = 7
 acceptableError = 10  # percent
 ss4_phase = "normal"
 # SS2
 ss2_state = "TL4_GREEN"
-ss2_state_start = 0.0
+ss2_state_start = time.time()
 ss2_ped_requested = False
 ss3_hold_active = False
 ss3_hold_start = 0.0
 ss2_hold_requested = False
-
+ss1_override_last_seen = 0.0   
 
 # US1 & TL1
-echoPinUS1    = 3
-triggerPinUS1 = 4
+echoPinUS1    = 4
+triggerPinUS1 = 9
 ss1_TL1_phase = "green"   # red, green, yellow
 ss1_TL1_phase_start = 0.0
 
 # US2
 echoPinUS2    = 3
-triggerPinUS2 = 4
+triggerPinUS2 = 10
 ss1_TL2_phase = "green"   # red, green, yellow
 ss1_TL2_phase_start = 0.0
 ss1_was_overridden = False
 
-ldrPinDS1 = 0
-ldrPinDS2 = 1
+ldrPinDS1 = 4
+ldrPinDS2 = 3
 pedestrianButton=2
+
+last_refresh = 0.0
 
 GREEN = True
 RED = False
 
+last_sent = None
 
 
 board.set_pin_mode_digital_output(DATA_PIN)
@@ -149,28 +152,37 @@ def shift_out(value, num_bits=8, msb_first=True):
     for i in bit_range:
         bit = (value >> i) & 1
         board.digital_write(DATA_PIN, bit)
+        time.sleep(0.001)
         board.digital_write(CLOCK_PIN, 1)
+        time.sleep(0.001)
         board.digital_write(CLOCK_PIN, 0)
+        time.sleep(0.001)
     board.digital_write(LATCH_PIN, 1)
+    time.sleep(0.005)
+
 
 def update_3_chips(chip3_val, chip2_val, chip1_val):
+    global last_sent
     combined = (chip3_val << 16) | (chip2_val << 8) | chip1_val
+    if combined == last_sent:
+        return
+    last_sent = combined
     shift_out(combined, num_bits=24)
 
 def set_shift3(mask, bits_on):
     global chip3_state
     chip3_state = (chip3_state & ~mask) | (bits_on & mask)
-    update_3_chips(chip1_state, chip3_state, chip2_state )
+    update_3_chips(chip3_state, chip2_state, chip1_state )
 
 def set_shift2(mask, bits_on):
-    global chip2_state
-    chip2_state = (chip2_state & ~mask) | (bits_on & mask)
-    update_3_chips(chip1_state, chip3_state, chip2_state )
-
-def set_shift1(mask, bits_on):
     global chip1_state
     chip1_state = (chip1_state & ~mask) | (bits_on & mask)
-    update_3_chips(chip1_state, chip3_state, chip2_state)
+    update_3_chips(chip3_state, chip2_state, chip1_state )
+
+def set_shift1(mask, bits_on):
+    global chip2_state
+    chip2_state = (chip2_state & ~mask) | (bits_on & mask)
+    update_3_chips(chip3_state, chip2_state, chip1_state)
 
 def heightDiff(distance):
     """
@@ -200,13 +212,13 @@ def yellow_state_ss3():
     set_shift3(TL6_MASK, YELLOW_TL6)
 
 def tl4_cycle_state():
-    set_shift2(TL4_MASK, GREEN_TL4)
+    set_shift2(TL4_MASK | TL5_MASK, GREEN_TL4 | RED_TL5)
 
 def tl4_cycle_state_off():
     set_shift2(TL4_MASK, YELLOW_TL4)
 
 def tl5_cycle_state():
-    set_shift2(TL5_MASK, GREEN_TL5)
+    set_shift2(TL4_MASK | TL5_MASK, GREEN_TL5 | RED_TL4)
 
 def tl5_cycle_state_off():
     set_shift2(TL5_MASK, YELLOW_TL5)
@@ -311,11 +323,15 @@ def ss2_step(now):
 
     is_day = ldr_reading["ldr_DS2"]
     elapsed = now - ss2_state_start
-    tl4_green_time = 20 if is_day else 30
-    tl5_green_time = 10 if is_day else 5
+    if is_day:
+        tl4_green_time = 20
+        tl5_green_time = 10
+    else:
+        tl4_green_time = 30
+        tl5_green_time = 5
 
     if ss2_state in ("TL4_GREEN", "TL5_GREEN", "TL4_YELLOW", "TL5_YELLOW"):
-        if board.digital_read(pedestrianButton)[0] == 0:
+        if board.digital_read(pedestrianButton)[0] == 1:
             print("button pressed")
             ss2_ped_requested = True
  
@@ -330,6 +346,7 @@ def ss2_step(now):
             ss2_state, ss2_state_start = "TL4_YELLOW", now
         elif elapsed > tl4_green_time:
             tl4_cycle_state_off()
+            print("yellow")
             ss2_state, ss2_state_start = "TL4_YELLOW", now
  
     elif ss2_state == "TL4_YELLOW":
@@ -354,6 +371,7 @@ def ss2_step(now):
             ss2_state, ss2_state_start = "TL5_YELLOW", now
         elif elapsed > tl5_green_time:
             tl5_cycle_state_off()
+            print("yellow")
             ss2_state, ss2_state_start = "TL5_YELLOW", now
 
     elif ss2_state == "TL5_YELLOW":
@@ -442,6 +460,15 @@ def ss4_step(is_overheight, us5_just_exited):
             normal_state_ss4()
             ss4_phase = "normal"
 
+def init_lights():
+    normal_state_ss1_TL1()
+    normal_state_ss1_TL2()
+    normal_state_ss3()
+    normal_state_ss4()
+    tl4_cycle_state()                # TL4 green, TL5 red
+    set_shift2(PED_MASK, RED_PED)
+
+
 def main():
     global us5_was_overheight
     while True:
@@ -462,7 +489,7 @@ def main():
                         print("Invalid input. height limit cannot be negative.")
                         overHeightLimit = None
 
-                    if overHeightLimit > TOP_HEIGHT:
+                    elif overHeightLimit > TOP_HEIGHT:
                         print(f"Invalid input. height limit cannot be more than {TOP_HEIGHT}.")
                         overHeightLimit = None
                 except ValueError:
@@ -470,6 +497,7 @@ def main():
 
 
             lastPollTime = time.time()
+            init_lights()
             while True:
                 currentTime = time.time()
                 if (currentTime - lastPollTime) >= pollingRate:
@@ -478,10 +506,17 @@ def main():
 
                     # reads & calcuations
                     heightUS1 = heightDiff(board.sonar_read(triggerPinUS1))
+                    time.sleep(0.1)
                     heightUS2 = heightDiff(board.sonar_read(triggerPinUS2))
+                    time.sleep(0.1)
+
                     heightUS3 = heightDiff(board.sonar_read(triggerPinUS3))
                     heightUS4 = heightDiff(board.sonar_read(triggerPinUS4))
+                    time.sleep(0.1)
+
                     heightUS5 = heightDiff(board.sonar_read(triggerPinUS5))
+                    time.sleep(0.1)
+
                     valueDS1 = board.analog_read(ldrPinDS1)[0]
                     valueDS2 = board.analog_read(ldrPinDS2)[0]
                     
@@ -501,7 +536,7 @@ def main():
                     us5_just_exited = us5_was_overheight and not overheight["us5"]
                     us5_was_overheight = overheight["us5"]
                     
-                    print(f"US3 height: {heightUS3:.2f} cm \n US4 height: {heightUS4:.2f} cm \n US5 height: {heightUS5:.2f} cm \n DS1 reading:{valueDS1:.2f}")
+                    print(f"US1 height: {heightUS1:.2f} cm \n US2 height: {heightUS2:.2f} cm \n US3 height: {heightUS3:.2f} cm \n US4 height: {heightUS4:.2f} cm \n US5 height: {heightUS5:.2f} cm \n DS1 reading:{valueDS1:.2f} \n DS2 reading:{valueDS2:.2f}")
                     # execution & logic
                     is_over_ss4 = overheight["us3"] and lowerErrorBound <= heightUS4 <= upperErrorBound
 
@@ -511,6 +546,7 @@ def main():
                     ss2_step(currentTime)
                     ss3_step(currentTime)
                     ss4_step(is_over_ss4, us5_just_exited)
+          
                     
         except KeyboardInterrupt:
             update_3_chips(0x00, 0x00, 0x00)

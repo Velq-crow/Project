@@ -1,9 +1,9 @@
 from pymata4 import pymata4
 import time
 
-DATA_PIN  = 13
-CLOCK_PIN = 11
-LATCH_PIN = 12
+DATA_PIN  = 14 #13
+CLOCK_PIN = 15
+LATCH_PIN = 16 #12
 
 # DATA_PIN  = 10
 # CLOCK_PIN = 6
@@ -27,9 +27,13 @@ def shift_out(value, num_bits=8, msb_first=True):
     for i in bit_range:
         bit = (value >> i) & 1
         board.digital_write(DATA_PIN, bit)
+        time.sleep(0.005)
         board.digital_write(CLOCK_PIN, 1)
+        time.sleep(0.005)
         board.digital_write(CLOCK_PIN, 0)
+        time.sleep(0.005)
     board.digital_write(LATCH_PIN, 1)
+    time.sleep(0.005)
 
 def update_3_chips(chip3_val, chip2_val, chip1_val):
     combined = (chip3_val << 16) | (chip2_val << 8) | chip1_val
@@ -51,15 +55,17 @@ def test_all_leds():
             chip_num, led_hex = 3, chip3_val
  
         print(f"Chip {chip_num}: 0x{led_hex:02X}")
- 
+
         update_3_chips(chip3_val, chip2_val, chip1_val)
-        time.sleep(1.5)
+        input("Press Enter for next LED...")
+        
         update_3_chips(0x00, 0x00, 0x00)  # off before next LED
         time.sleep(0.5)
  
     # All LEDs on
     update_3_chips(0xFF, 0xFF, 0xFF)
-    time.sleep(1)
+    input("All on. Press Enter to turn off...")
+
  
     # All LEDs off
     update_3_chips(0x00, 0x00, 0x00)
@@ -67,34 +73,43 @@ def test_all_leds():
 def main():
     while True:
         try:
+    
             
-            
-            # test_all_leds()
+            test_all_leds()
             # time.sleep(3)  
-            print("shift")
-            update_3_chips(0xFF, 0xFF, 0xFF)
-            board.digital_write(7, 0)
-            time.sleep(3)
+            # print("shift")
+            # update_3_chips(0xFF, 0x00, 0x00)
+            # print("chip 3")
+            # time.sleep(2)
+            # update_3_chips(0x00, 0xFF, 0x00)
+            # print("chip 2")
+            # time.sleep(2)
+            # update_3_chips(0x00, 0x00, 0xFF)
+            # print("chip 1")
+            # time.sleep(2)
+
+            # board.digital_pin_write()
+            # time.sleep(2)
+            # board.digital_write(7, 0)
+            # time.sleep(3)
 
 
-            print("7")
-            update_3_chips(0x00, 0x00, 0x00)
-            board.digital_write(7,1 )            
-            time.sleep(3)  
+            # print("7")
+            # update_3_chips(0x00, 0x00, 0x00)
+            # board.digital_write(8,1 )            
+            # time.sleep(3)  
 
-            print("shift&7")
-            update_3_chips(0xFF, 0xFF, 0xFF)
-            board.digital_write(7, 1)            
-            time.sleep(3)
+            # print("shift")
+            # # update_3_chips(0xFF, 0xFF, 0xFF)
+            # board.digital_write(8, 0)            
+            # time.sleep(3)
 
-            print("none")
-            update_3_chips(0x00, 0x00, 0x00)
-            board.digital_write(7, 0)            
-            time.sleep(3)         
+            # print("none")
+            # update_3_chips(0x00, 0x00, 0x00)
+            # board.digital_write(8, 0)            
+            # time.sleep(3)         
+
             
-            board.digital_write(8, 1)
-            board.digital_write(7, 1)
-            # update_3_chips(0xFF, 0xFF, 0xFF)
             
         except KeyboardInterrupt:
             update_3_chips(0x00, 0x00, 0x00)
