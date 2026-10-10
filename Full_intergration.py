@@ -120,7 +120,7 @@ GREEN = True
 RED = False
 
 last_sent = None
-
+SONAR_TIMEOUT =  10000
 
 board.set_pin_mode_digital_output(DATA_PIN)
 board.set_pin_mode_digital_output(CLOCK_PIN)
@@ -132,11 +132,11 @@ board.digital_write(redPedFlashing, 0)
 board.set_pin_mode_digital_input_pullup(pedestrianButton)
 
 
-board.set_pin_mode_sonar(triggerPinUS5, echoPinUS5, timeout=200000)
-board.set_pin_mode_sonar(triggerPinUS3, echoPinUS3, timeout=200000)
-board.set_pin_mode_sonar(triggerPinUS4, echoPinUS4, timeout=200000)
-board.set_pin_mode_sonar(triggerPinUS1, echoPinUS1, timeout=200000)
-board.set_pin_mode_sonar(triggerPinUS2, echoPinUS2, timeout=200000)
+board.set_pin_mode_sonar(triggerPinUS5, echoPinUS5, timeout=SONAR_TIMEOUT)
+board.set_pin_mode_sonar(triggerPinUS3, echoPinUS3, timeout=SONAR_TIMEOUT)
+board.set_pin_mode_sonar(triggerPinUS4, echoPinUS4, timeout=SONAR_TIMEOUT)
+board.set_pin_mode_sonar(triggerPinUS1, echoPinUS1, timeout=SONAR_TIMEOUT)
+board.set_pin_mode_sonar(triggerPinUS2, echoPinUS2, timeout=SONAR_TIMEOUT)
 board.set_pin_mode_analog_input(ldrPinDS1)
 board.set_pin_mode_analog_input(ldrPinDS2)
 
@@ -152,13 +152,9 @@ def shift_out(value, num_bits=8, msb_first=True):
     for i in bit_range:
         bit = (value >> i) & 1
         board.digital_write(DATA_PIN, bit)
-        time.sleep(0.001)
         board.digital_write(CLOCK_PIN, 1)
-        time.sleep(0.001)
         board.digital_write(CLOCK_PIN, 0)
-        time.sleep(0.001)
     board.digital_write(LATCH_PIN, 1)
-    time.sleep(0.005)
 
 
 def update_3_chips(chip3_val, chip2_val, chip1_val):
