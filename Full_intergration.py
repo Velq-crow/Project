@@ -11,20 +11,23 @@ board = pymata4.Pymata4()
 
 # Constants
 TOP_HEIGHT = 10 #cm
-pollingRate  = 1  # seconds
-calibrated_value_day = 1
+pollingRate  = 3  # seconds
+calibrated_value_day = 800
 
-DATA_PIN  = 14 #13
-CLOCK_PIN = 16
-LATCH_PIN = 15 #12
+# DATA_PIN  = 12
+# CLOCK_PIN = 10
+# LATCH_PIN = 11
 
+DATA_PIN  = 14 #a0 
+CLOCK_PIN = 16 #a2
+LATCH_PIN = 15 #a1
 
 #SS3 AND 4
-RED_TL6    = 0x20
-GREEN_TL6  = 0x08
-YELLOW_TL6 = 0x10
-GREEN_TL3  = 0x40
-RED_TL3    = 0x80
+RED_TL6    = 0x08
+GREEN_TL6  = 0x02
+YELLOW_TL6 = 0x04
+GREEN_TL3  = 0x10
+RED_TL3    = 0x20
 
 #SS 2
 RED_TL5    = 0x40  # Pin 8
@@ -38,14 +41,15 @@ GREEN_PED  = 0x10  # Pin 1
 redPedFlashing = 8
 
 #SS 1
-GREEN_TL2  = 0x40  # Pin 3
-GREEN_TL1  = 0x20  # Pin 2
-YELLOW_TL2 = 0x80  # Pin 5
-YELLOW_TL1 = 0x10  # Pin 4
-RED_TL2    = 0x08  # Pin 7
+GREEN_TL2  = 0x20  # Pin 3
+GREEN_TL1  = 0x10  # Pin 2
+YELLOW_TL2 = 0x40  # Pin 5
+YELLOW_TL1 = 0x08  # Pin 4
+RED_TL2    = 0x80  # Pin 7
 RED_TL1    = 0x04  # Pin 6
 LIGHTS_WL1 = 0x02  # Pin 8
 BUZZER_PA1 = 0x01  # Pin 1
+
 
 TL6_MASK = RED_TL6 | YELLOW_TL6 | GREEN_TL6
 TL5_MASK = RED_TL5 | YELLOW_TL5 | GREEN_TL5
@@ -74,17 +78,17 @@ ldr_reading = {
 }
 
 # US5 (TL6 / ss3)
-echoPinUS5    = 5
-triggerPinUS5 = 13
+echoPinUS5    = 12
+triggerPinUS5 = 11
 us5_was_overheight = False
 us5_just_exited = False
 ss3_phase = "normal"   # normal, green, yellow
 ss3_phase_start = 0.0
 
 # US3 / US4 (TL3 / ss4)
-triggerPinUS3 = 11
-echoPinUS3    = 6
-triggerPinUS4 = 12
+triggerPinUS3 = 10
+echoPinUS3    = 9
+triggerPinUS4 = 13
 echoPinUS4    = 7
 acceptableError = 10  # percent
 ss4_phase = "normal"
@@ -98,14 +102,14 @@ ss2_hold_requested = False
 ss1_override_last_seen = 0.0   
 
 # US1 & TL1
-echoPinUS1    = 4
-triggerPinUS1 = 9
+echoPinUS1    = 6
+triggerPinUS1 = 5
 ss1_TL1_phase = "green"   # red, green, yellow
 ss1_TL1_phase_start = 0.0
 
 # US2
-echoPinUS2    = 3
-triggerPinUS2 = 10
+echoPinUS2    = 4
+triggerPinUS2 = 3
 ss1_TL2_phase = "green"   # red, green, yellow
 ss1_TL2_phase_start = 0.0
 ss1_was_overridden = False
@@ -120,7 +124,7 @@ GREEN = True
 RED = False
 
 last_sent = None
-SONAR_TIMEOUT =  10000
+SONAR_TIMEOUT =  5000
 
 board.set_pin_mode_digital_output(DATA_PIN)
 board.set_pin_mode_digital_output(CLOCK_PIN)
@@ -129,7 +133,7 @@ board.set_pin_mode_digital_output(LATCH_PIN)
 board.set_pin_mode_digital_output(redPedFlashing)
 board.digital_write(redPedFlashing, 0)
 
-board.set_pin_mode_digital_input_pullup(pedestrianButton)
+board.set_pin_mode_digital_input(pedestrianButton)
 
 
 board.set_pin_mode_sonar(triggerPinUS5, echoPinUS5, timeout=SONAR_TIMEOUT)
@@ -154,6 +158,7 @@ def shift_out(value, num_bits=8, msb_first=True):
         board.digital_write(DATA_PIN, bit)
         board.digital_write(CLOCK_PIN, 1)
         board.digital_write(CLOCK_PIN, 0)
+        # time.sleep(0.05)
     board.digital_write(LATCH_PIN, 1)
 
 
@@ -367,7 +372,6 @@ def ss2_step(now):
             ss2_state, ss2_state_start = "TL5_YELLOW", now
         elif elapsed > tl5_green_time:
             tl5_cycle_state_off()
-            print("yellow")
             ss2_state, ss2_state_start = "TL5_YELLOW", now
 
     elif ss2_state == "TL5_YELLOW":
@@ -457,12 +461,23 @@ def ss4_step(is_overheight, us5_just_exited):
             ss4_phase = "normal"
 
 def init_lights():
-    normal_state_ss1_TL1()
-    normal_state_ss1_TL2()
-    normal_state_ss3()
-    normal_state_ss4()
-    tl4_cycle_state()                # TL4 green, TL5 red
-    set_shift2(PED_MASK, RED_PED)
+    """
+    Used to put every light in its starting state with a single shift out.
+ 
+        Parameters:
+            function has no parameters
+ 
+        Returns:
+            function has no return
+    """
+    global chip1_state, chip2_state, chip3_state
+ 
+    chip2_state = GREEN_TL1 | GREEN_TL2           # SS1: TL1 and TL2 green
+    chip3_state = RED_TL6 | GREEN_TL3             # SS3: TL6 red, SS4: TL3 green
+    chip1_state = GREEN_TL4 | RED_TL5 | RED_PED   # SS2: TL4 green, TL5 red, ped red
+ 
+    update_3_chips(chip3_state, chip2_state, chip1_state)
+
 
 
 def main():
@@ -471,7 +486,7 @@ def main():
         try: 
             #Validation loop
             overHeightLimit = None
-            while overHeightLimit is None or overHeightLimit < 0 or overHeightLimit > TOP_HEIGHT:
+            while overHeightLimit is None or overHeightLimit < 0 :# or overHeightLimit > TOP_HEIGHT
                 limitInput = input("Enter the height limit (m): ").strip()
                 try:
                     if limitInput == "":
@@ -502,16 +517,10 @@ def main():
 
                     # reads & calcuations
                     heightUS1 = heightDiff(board.sonar_read(triggerPinUS1))
-                    time.sleep(0.1)
                     heightUS2 = heightDiff(board.sonar_read(triggerPinUS2))
-                    time.sleep(0.1)
-
                     heightUS3 = heightDiff(board.sonar_read(triggerPinUS3))
                     heightUS4 = heightDiff(board.sonar_read(triggerPinUS4))
-                    time.sleep(0.1)
-
                     heightUS5 = heightDiff(board.sonar_read(triggerPinUS5))
-                    time.sleep(0.1)
 
                     valueDS1 = board.analog_read(ldrPinDS1)[0]
                     valueDS2 = board.analog_read(ldrPinDS2)[0]
@@ -542,6 +551,8 @@ def main():
                     ss2_step(currentTime)
                     ss3_step(currentTime)
                     ss4_step(is_over_ss4, us5_just_exited)
+                  
+
           
                     
         except KeyboardInterrupt:
@@ -551,6 +562,8 @@ def main():
             print("\nExiting program")
             time.sleep(1)
             break
+
+
 
     board.shutdown()
 if __name__ == "__main__":
