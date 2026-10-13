@@ -11,7 +11,7 @@ board = pymata4.Pymata4()
 
 # Constants
 TOP_HEIGHT = 10 #cm
-pollingRate  = 3  # seconds
+pollingRate  = 2 # seconds
 calibrated_value_day = 800
 
 # DATA_PIN  = 12
@@ -173,17 +173,17 @@ def update_3_chips(chip3_val, chip2_val, chip1_val):
 def set_shift3(mask, bits_on):
     global chip3_state
     chip3_state = (chip3_state & ~mask) | (bits_on & mask)
-    update_3_chips(chip3_state, chip2_state, chip1_state )
+    # update_3_chips(chip3_state, chip2_state, chip1_state )
 
 def set_shift2(mask, bits_on):
     global chip1_state
     chip1_state = (chip1_state & ~mask) | (bits_on & mask)
-    update_3_chips(chip3_state, chip2_state, chip1_state )
+    # update_3_chips(chip3_state, chip2_state, chip1_state )
 
 def set_shift1(mask, bits_on):
     global chip2_state
     chip2_state = (chip2_state & ~mask) | (bits_on & mask)
-    update_3_chips(chip3_state, chip2_state, chip1_state)
+    # update_3_chips(chip3_state, chip2_state, chip1_state)
 
 def heightDiff(distance):
     """
@@ -551,6 +551,7 @@ def main():
                     ss2_step(currentTime)
                     ss3_step(currentTime)
                     ss4_step(is_over_ss4, us5_just_exited)
+                    update_3_chips(chip3_state, chip2_state, chip1_state )
                   
 
           
