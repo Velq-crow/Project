@@ -11,7 +11,7 @@ board = pymata4.Pymata4()
 
 # Constants
 TOP_HEIGHT = 10 #cm
-pollingRate  = 2 # seconds
+pollingRate  = 1 # seconds
 calibrated_value_day = 800
 
 # DATA_PIN  = 12
@@ -102,8 +102,8 @@ ss2_hold_requested = False
 ss1_override_last_seen = 0.0   
 
 # US1 & TL1
-echoPinUS1    = 6
-triggerPinUS1 = 5
+echoPinUS1    = 5
+triggerPinUS1 = 6
 ss1_TL1_phase = "green"   # red, green, yellow
 ss1_TL1_phase_start = 0.0
 
@@ -156,8 +156,12 @@ def shift_out(value, num_bits=8, msb_first=True):
     for i in bit_range:
         bit = (value >> i) & 1
         board.digital_write(DATA_PIN, bit)
+        time.sleep(0.01)
         board.digital_write(CLOCK_PIN, 1)
+        time.sleep(0.01)
         board.digital_write(CLOCK_PIN, 0)
+        time.sleep(0.01)
+
         # time.sleep(0.05)
     board.digital_write(LATCH_PIN, 1)
 
